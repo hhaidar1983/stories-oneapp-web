@@ -127,3 +127,4 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .dwell.bad { color: #b42318; }
 
 .logo .emblem { display: block; width: 34px; height: 34px; }
+@media (max-width: 640px) { .app { padding: 0 12px 90px; } header.top { flex-wrap: wrap; gap: 10px; padding: 10px 14px; } .brand { flex: 1 1 100%; gap: 10px; } .brand h1 { font-size: 17px; line-height: 1.15; } .brand small { font-size: 10px; } .spacer { display: none; } .roleswitch button { padding: 7px 12px; font-size: 12.5px; } .authbox { margin-left: auto; min-width: 0; } .authbox select { max-width: 52vw; } main { margin-top: 16px; } .detailhead h2 { font-size: 18px; } .submitbar { flex-wrap: wrap; gap: 12px; } .submitbar .txt { flex: 1 1 100%; } .submitbar .primary { margin-left: 0; width: 100%; text-align: center; padding: 14px; } }
