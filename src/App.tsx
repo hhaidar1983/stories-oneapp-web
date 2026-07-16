@@ -15,6 +15,8 @@ import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:3000/v1';
+// View is chosen by the signed-in role, not a manual toggle.
+const HQ_ROLES = ['hq_reviewer', 'head_office', 'admin', 'area_manager', 'ops_manager'];
 
 // One shared interactive-auth attempt at a time, so N concurrent API calls that
 // hit an expired token don't each open a login popup (the browser blocks the extras).
@@ -86,7 +88,6 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
 
 function Shell() {
   const auth = useAuth();
-  const [role, setRole] = useState<'branch' | 'hq'>('branch');
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
   const api = useMemo(() => createApi(API_BASE, auth.authHeaders), [auth]);
@@ -110,14 +111,6 @@ function Shell() {
           </div>
         </div>
         <div className="spacer" />
-        <div className="roleswitch">
-          <button className={role === 'branch' ? 'active' : ''} onClick={() => setRole('branch')}>
-            Branch App
-          </button>
-          <button className={role === 'hq' ? 'active' : ''} onClick={() => setRole('hq')}>
-            Head Office
-          </button>
-        </div>
         <div className="authbox">
           {auth.mode === 'demo' ? (
             <select value={auth.devUserId} onChange={(e) => auth.setDevUserId(e.target.value)}>
@@ -141,7 +134,7 @@ function Shell() {
         ) : (
           <>
             {error && <div className="err">{error}</div>}
-            {role === 'branch' ? <BranchApp api={api} me={me} /> : <HeadOffice api={api} />}
+            {!me || !HQ_ROLES.includes(me.role) ? <BranchApp api={api} me={me} /> : <HeadOffice api={api} />}
           </>
         )}
       </main>
