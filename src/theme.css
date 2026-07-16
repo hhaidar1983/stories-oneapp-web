@@ -127,7 +127,70 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .dwell.bad { color: #b42318; }
 
 .logo .emblem { display: block; width: 34px; height: 34px; }
-@media (max-width: 640px) { .app { padding: 0 12px 90px; } header.top { flex-wrap: wrap; gap: 10px; padding: 10px 14px; } .brand { flex: 1 1 100%; gap: 10px; } .brand h1 { font-size: 17px; line-height: 1.15; } .brand small { font-size: 10px; } .spacer { display: none; } .roleswitch button { padding: 7px 12px; font-size: 12.5px; } .authbox { margin-left: auto; min-width: 0; } .authbox select { max-width: 52vw; } main { margin-top: 16px; } .detailhead h2 { font-size: 18px; } .submitbar { flex-wrap: wrap; gap: 12px; } .submitbar .txt { flex: 1 1 100%; } .submitbar .primary { margin-left: 0; width: 100%; text-align: center; padding: 14px; } }
-@media (max-width: 640px) { .app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); } header.top { padding-top: calc(10px + env(safe-area-inset-top)); } .ctxbar { flex-direction: column; align-items: stretch; gap: 10px; } .ctxbar > div, .ctxbar select { width: 100%; } .who { font-size: 12.5px; } .cbtn { padding: 13px; font-size: 15px; } .capbtn { padding: 13px 16px; font-size: 14px; } .numrow input { flex: 1; width: auto; min-width: 88px; } .detailhead h2 { font-size: 17px; } .backbtn { padding: 9px 12px; } .submitbar { bottom: calc(10px + env(safe-area-inset-bottom)); } table { display: block; overflow-x: auto; white-space: nowrap; border-radius: 12px; } th, td { padding: 10px 12px; font-size: 12.5px; } .overlay { padding: 12px 8px; } .modal { border-radius: 16px; } .mbody { max-height: 66vh; } .rvitem { flex-wrap: wrap; } .rvact { margin-left: auto; } .mfoot { flex-wrap: wrap; } .mfoot input { flex: 1 1 100%; } .mfoot .return, .mfoot .approve { flex: 1; text-align: center; } }
 
-@media (max-width: 640px) { table { display: block; border: none; box-shadow: none; background: transparent; overflow: visible; } thead { display: none; } tbody { display: block; } tr { display: block; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 12px; padding: 6px 4px; } td { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: none; padding: 9px 14px; font-size: 13.5px; white-space: normal; } td:not(:first-child)::before { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); } td:nth-child(2)::before { content: "Checklist"; } td:nth-child(3)::before { content: "Completion"; } td:nth-child(4)::before { content: "Duration"; } td:nth-child(5)::before { content: "Status"; } td:nth-child(6)::before { content: "Time"; } td:first-child { font-size: 15px; font-weight: 700; padding-top: 12px; } }
+/* App-launcher tiles: dim the not-yet-live ones and disable hover lift. */
+.card.soon { opacity: .55; cursor: default; }
+.card.soon:hover { transform: none; border-color: var(--line); box-shadow: var(--shadow); }
+.menuback { margin-bottom: 14px; }
+
+/* --- Mobile / phone layout --- */
+@media (max-width: 640px) {
+  .app { padding: 0 12px 90px; }
+  header.top { flex-wrap: wrap; gap: 10px; padding: 10px 14px; border-radius: 0 0 14px 14px; }
+  .brand { flex: 1 1 100%; gap: 10px; }
+  .brand h1 { font-size: 17px; line-height: 1.15; }
+  .brand small { font-size: 10px; letter-spacing: .2px; }
+  .spacer { display: none; }
+  .roleswitch { flex: 0 0 auto; }
+  .roleswitch button { padding: 7px 12px; font-size: 12.5px; }
+  .authbox { margin-left: auto; min-width: 0; }
+  .authbox select { max-width: 52vw; }
+  main { margin-top: 16px; }
+  .ctxbar { padding: 12px 14px; }
+  .ctxbar select { max-width: 100%; }
+  .detailhead h2 { font-size: 18px; }
+  .submitbar { flex-wrap: wrap; gap: 12px; padding: 14px 16px; bottom: 10px; }
+  .submitbar .txt { flex: 1 1 100%; }
+  .submitbar .primary { margin-left: 0; width: 100%; text-align: center; padding: 14px; }
+}
+
+/* --- Mobile polish (phone touch + Head Office + review modal + safe areas) --- */
+@media (max-width: 640px) {
+  .app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  header.top { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .ctxbar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .ctxbar > div, .ctxbar select { width: 100%; }
+  .who { font-size: 12.5px; }
+  .cbtn { padding: 13px; font-size: 15px; }
+  .capbtn { padding: 13px 16px; font-size: 14px; }
+  .numrow input { flex: 1; width: auto; min-width: 88px; }
+  .detailhead h2 { font-size: 17px; }
+  .backbtn { padding: 9px 12px; }
+  .submitbar { bottom: calc(10px + env(safe-area-inset-bottom)); }
+  table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+  th, td { padding: 10px 12px; font-size: 12.5px; }
+  .overlay { padding: 12px 8px; }
+  .modal { border-radius: 16px; }
+  .mbody { max-height: 66vh; }
+  .rvitem { flex-wrap: wrap; }
+  .rvact { margin-left: auto; }
+  .mfoot { flex-wrap: wrap; }
+  .mfoot input { flex: 1 1 100%; }
+  .mfoot .return, .mfoot .approve { flex: 1; text-align: center; }
+}
+
+/* --- Mobile: Head Office submissions table becomes stacked cards --- */
+@media (max-width: 640px) {
+  table { display: block; border: none; box-shadow: none; background: transparent; overflow: visible; }
+  thead { display: none; }
+  tbody { display: block; }
+  tr { display: block; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); margin-bottom: 12px; padding: 6px 4px; }
+  td { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: none; padding: 9px 14px; font-size: 13.5px; white-space: normal; }
+  td:not(:first-child)::before { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+  td:nth-child(2)::before { content: "Checklist"; }
+  td:nth-child(3)::before { content: "Completion"; }
+  td:nth-child(4)::before { content: "Duration"; }
+  td:nth-child(5)::before { content: "Status"; }
+  td:nth-child(6)::before { content: "Time"; }
+  td:first-child { font-size: 15px; font-weight: 700; padding-top: 12px; }
+}
