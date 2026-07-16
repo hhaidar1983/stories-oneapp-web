@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { createElement as h, useEffect, useMemo, useState } from 'react';
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import { Logo } from './Logo';
 import {
@@ -15,8 +15,22 @@ import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:3000/v1';
-// View is chosen by the signed-in role, not a manual toggle.
+
+// Which view a signed-in user sees is decided by their role (set at login), not a
+// manual toggle. Everyone else defaults to the branch (staff) app.
 const HQ_ROLES = ['hq_reviewer', 'head_office', 'admin', 'area_manager', 'ops_manager'];
+
+// Staff app launcher. Only 'checklists' is live today; the rest are placeholders
+// to be wired to their real systems/links later. Set url on a tile to open a
+// link, or live to route it inside this app.
+type AppTile = { key: string; icon: string; name: string; sub: string; live?: boolean; url?: string };
+const APP_TILES: AppTile[] = [
+  { key: 'checklists', icon: '📋', name: 'Daily Checklists', sub: 'Opening, handover & closing', live: true },
+  { key: 'maintenance', icon: '🛠️', name: 'Maintenance Tickets', sub: 'Report a broken machine or fixture' },
+  { key: 'whistle', icon: '📣', name: 'Whistleblowing', sub: 'Raise a concern confidentially' },
+  { key: 'suggestions', icon: '💡', name: 'Suggestions', sub: 'Share an idea to improve Stories' },
+  { key: 'vacation', icon: '🌴', name: 'Vacation Request', sub: 'Request time off' },
+];
 
 // One shared interactive-auth attempt at a time, so N concurrent API calls that
 // hit an expired token don't each open a login popup (the browser blocks the extras).
@@ -86,8 +100,11 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
   return <AuthContext.Provider value={auth}>{children(auth)}</AuthContext.Provider>;
 }
 
+function Hub({ onOpen }: { onOpen: (key: string) => void }) { return h('div', null, h('div', { className: 'sectionlabel' }, 'Stories staff apps'), h('div', { className: 'cards' }, APP_TILES.map((a) => h('div', { key: a.key, className: 'card ' + (a.live || a.url ? '' : 'soon'), onClick: () => { if (a.url) window.open(a.url, '_blank', 'noopener'); else if (a.live) onOpen(a.key); } }, h('span', { className: 'badge ' + (a.live || a.url ? 'b-done' : 'b-todo') }, a.live || a.url ? 'OPEN' : 'COMING SOON'), h('div', { className: 'cicon' }, a.icon), h('h3', null, a.name), h('div', { className: 'sub' }, a.sub))))); }
+
 function Shell() {
   const auth = useAuth();
+  const [openApp, setOpenApp] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
   const api = useMemo(() => createApi(API_BASE, auth.authHeaders), [auth]);
@@ -131,8 +148,11 @@ function Shell() {
       <main>
         {!auth.signedIn ? (
           <div className="center">Sign in with your Stories account to continue.</div>
+        ) : !openApp ? (
+          Hub({ onOpen: setOpenApp })
         ) : (
           <>
+            {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
             {error && <div className="err">{error}</div>}
             {!me || !HQ_ROLES.includes(me.role) ? <BranchApp api={api} me={me} /> : <HeadOffice api={api} />}
           </>
