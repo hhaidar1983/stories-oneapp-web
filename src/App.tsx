@@ -27,7 +27,6 @@ type AppTile = { key: string; icon: string; name: string; sub: string; live?: bo
 const APP_TILES: AppTile[] = [
   { key: 'checklists', icon: '📋', name: 'Daily Checklists', sub: 'Opening, handover & closing', live: true },
   { key: 'maintenance', icon: '🛠️', name: 'Maintenance Tickets', sub: 'Report a broken machine or fixture' },
-  { key: 'whistle', icon: '📣', name: 'Whistleblowing', sub: 'Raise a concern confidentially' },
   { key: 'suggestions', icon: '💡', name: 'Suggestions', sub: 'Share an idea to improve Stories' },
   { key: 'vacation', icon: '🌴', name: 'Vacation Request', sub: 'Request time off' },
 ];
