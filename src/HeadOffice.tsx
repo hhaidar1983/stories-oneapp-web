@@ -177,9 +177,19 @@ function ReviewModal({ api, detail, onClose, onDone }: {
                     {valTxt}
                     {(i.media ?? []).map((m) => {
                       const href = safeHttps(m.viewUrl);
-                      return href ? (
-                        <span key={m.id}> · <a href={href} target="_blank" rel="noreferrer">view</a></span>
-                      ) : null;
+                      const dist = m.distanceM != null
+                        ? m.distanceM >= 1000 ? `${(m.distanceM / 1000).toFixed(1)} km` : `${m.distanceM} m`
+                        : null;
+                      return (
+                        <span key={m.id}>
+                          {href ? <> · <a href={href} target="_blank" rel="noreferrer">view</a></> : null}
+                          {m.geoFlag ? (
+                            <span style={{ color: 'var(--danger)', fontWeight: 700 }}> · 📍 off-site{dist ? ` (${dist} away)` : ''}</span>
+                          ) : m.gpsLat != null ? (
+                            <span style={{ color: 'var(--muted)' }}> · 📍 on-site{dist ? ` (${dist})` : ''}</span>
+                          ) : null}
+                        </span>
+                      );
                     })}
                   </div>
                 </div>
