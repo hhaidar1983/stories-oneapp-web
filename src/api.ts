@@ -113,6 +113,50 @@ export interface AppNotification {
   createdAt: string;
 }
 
+// --- Escalation types --------------------------------------------------------
+export interface Person {
+  name: string;
+  email: string;
+  whatsapp: string;
+}
+export interface Level {
+  level: number;
+  title: string;
+  people: Person[];
+}
+export interface SectionRule {
+  severity: 'critical' | 'high' | 'medium';
+  startLevel: number;
+  enabled: boolean;
+}
+export type TriggerKey = 'flagged_evidence' | 'not_submitted' | 'low_completion' | 'rushed';
+export type SectionKey = 'opening' | 'handover' | 'closing';
+export interface EscalationConfig {
+  levels: Level[];
+  climbMinutes: Record<string, number>;
+  sectionRules: Record<SectionKey, Record<TriggerKey, SectionRule>>;
+  deadlines: Record<SectionKey, string>;
+  channels: { inApp: boolean; email: boolean; whatsapp: boolean };
+}
+export interface EscalationRow {
+  id: string;
+  branch: { id: string; name: string };
+  templateKey: string;
+  trigger: TriggerKey;
+  severity: 'critical' | 'high' | 'medium';
+  status: 'open' | 'acknowledged' | 'resolved';
+  currentLevel: number;
+  levelTitle: string;
+  assignees: string[];
+  reason: string | null;
+  businessDate: string;
+  createdAt: string;
+  lastClimbAt: string;
+  acknowledgedAt: string | null;
+  resolvedAt: string | null;
+  history: { level: number; at: string; action: string; by?: string; note?: string }[];
+}
+
 export function createApi(base: string, authHeaders: () => Promise<Record<string, string>>) {
   async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const headers = {
@@ -163,6 +207,16 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
       req<AppNotification[]>(`/notifications${unread ? '?unread=true' : ''}`),
     markNotificationRead: (id: string) =>
       req<{ id: string; read: boolean }>(`/notifications/${id}/read`, { method: 'POST' }),
+    // --- Escalations -------------------------------------------------------
+    escalations: (status?: string) =>
+      req<EscalationRow[]>(`/escalations${status ? `?status=${status}` : ''}`),
+    escalationConfig: () => req<EscalationConfig>('/escalations/config'),
+    saveEscalationConfig: (body: EscalationConfig) =>
+      req<EscalationConfig>('/escalations/config', { method: 'PUT', body: JSON.stringify(body) }),
+    ackEscalation: (id: string) =>
+      req<unknown>(`/escalations/${id}/acknowledge`, { method: 'POST' }),
+    resolveEscalation: (id: string, note?: string) =>
+      req<unknown>(`/escalations/${id}/resolve`, { method: 'POST', body: JSON.stringify({ note }) }),
   };
 }
 
