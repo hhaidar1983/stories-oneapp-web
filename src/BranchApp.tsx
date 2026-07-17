@@ -128,7 +128,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     });
   }, [values, open]);
 
-  async function capture(item: ChecklistItem, kind: 'photo' | 'video', file: File) {
+  async function capture(item: ChecklistItem, kind: 'photo' | 'video', file: File, meta?: CaptureMeta) {
     setBusy(item.id);
     setError(null);
     try {
@@ -137,7 +137,13 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       await uploadToBlob(token, file);
       setValues((v) => ({
         ...v,
-        [item.id]: { ...v[item.id], media: [{ kind, storageKey: token.storageKey, mime: file.type, sizeBytes: file.size }] },
+        [item.id]: {
+          ...v[item.id],
+          media: [{
+            kind, storageKey: token.storageKey, mime: file.type, sizeBytes: file.size,
+            gpsLat: meta?.lat, gpsLng: meta?.lng, gpsAccuracyM: meta?.accuracyM, capturedAt: meta?.capturedAt,
+          }],
+        },
       }));
     } catch (e: any) {
       setError(e.message);
@@ -223,7 +229,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
             kind={cam.kind}
             branchName={branchLabel}
             onCancel={() => setCam(null)}
-            onCapture={(file) => { const c = cam; setCam(null); capture(c.item, c.kind, file); }}
+            onCapture={(file, meta) => { const c = cam; setCam(null); capture(c.item, c.kind, file, meta); }}
           />
         )}
       </>
@@ -328,6 +334,7 @@ function ItemRow(props: {
 }
 
 type Geo = { lat: number; lng: number; acc: number };
+type CaptureMeta = { lat?: number; lng?: number; accuracyM?: number; capturedAt: string };
 
 function pickVideoMime(): string {
   const opts = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
@@ -348,7 +355,7 @@ function CameraCapture({
   kind: 'photo' | 'video';
   branchName: string;
   onCancel: () => void;
-  onCapture: (file: File) => void;
+  onCapture: (file: File, meta: CaptureMeta) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -430,10 +437,14 @@ function CameraCapture({
     if (!ctx) return;
     ctx.drawImage(v, 0, 0, w, h);
     drawStamp(ctx, w, h);
+    const capturedAt = new Date().toISOString();
     c.toBlob((blob) => {
       if (!blob) { setErr('Could not capture image, please try again.'); return; }
       stopStream();
-      onCapture(new File([blob], `photo_${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`, { type: 'image/jpeg' }));
+      onCapture(
+        new File([blob], `photo_${capturedAt.replace(/[:.]/g, '-')}.jpg`, { type: 'image/jpeg' }),
+        { lat: geo?.lat, lng: geo?.lng, accuracyM: geo ? Math.round(geo.acc) : undefined, capturedAt },
+      );
     }, 'image/jpeg', 0.9);
   }
 
@@ -444,6 +455,7 @@ function CameraCapture({
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
     if (!ctx) return;
+    const capturedAt = new Date().toISOString();
     const draw = () => {
       ctx.drawImage(v, 0, 0, w, h);
       drawStamp(ctx, w, h);
@@ -473,7 +485,10 @@ function CameraCapture({
       const blob = new Blob(chunksRef.current, { type: mime });
       stopStream();
       const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-      onCapture(new File([blob], `video_${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`, { type: mime }));
+      onCapture(
+        new File([blob], `video_${capturedAt.replace(/[:.]/g, '-')}.${ext}`, { type: mime }),
+        { lat: geo?.lat, lng: geo?.lng, accuracyM: geo ? Math.round(geo.acc) : undefined, capturedAt },
+      );
     };
     recRef.current = rec;
     rec.start();
