@@ -100,7 +100,7 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
   return <AuthContext.Provider value={auth}>{children(auth)}</AuthContext.Provider>;
 }
 
-function Hub({ onOpen }: { onOpen: (key: string) => void }) { return h('div', null, h('div', { className: 'sectionlabel' }, 'Stories staff apps'), h('div', { className: 'cards' }, APP_TILES.map((a) => h('div', { key: a.key, className: 'card ' + (a.live || a.url ? '' : 'soon'), onClick: () => { if (a.url) window.open(a.url, '_blank', 'noopener'); else if (a.live) onOpen(a.key); } }, h('span', { className: 'badge ' + (a.live || a.url ? 'b-done' : 'b-todo') }, a.live || a.url ? 'OPEN' : 'COMING SOON'), h('div', { className: 'cicon' }, a.icon), h('h3', null, a.name), h('div', { className: 'sub' }, a.sub))))); }
+function Hub({ onOpen }: { onOpen: (key: string) => void }) { return h('div', null, h('div', { className: 'sectionlabel' }, 'Stories staff apps'), h('div', { className: 'cards applauncher' }, APP_TILES.map((a) => h('div', { key: a.key, className: 'card appcard ' + (a.live || a.url ? '' : 'soon'), onClick: () => { if (a.url) window.open(a.url, '_blank', 'noopener'); else if (a.live) onOpen(a.key); } }, h('span', { className: 'badge ' + (a.live || a.url ? 'b-done' : 'b-todo') }, a.live || a.url ? 'OPEN' : 'COMING SOON'), h('div', { className: 'cicon' }, a.icon), h('h3', null, a.name), h('div', { className: 'sub' }, a.sub))))); }
 
 function Shell() {
   const auth = useAuth();
