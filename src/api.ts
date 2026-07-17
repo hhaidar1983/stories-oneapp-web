@@ -31,6 +31,11 @@ export interface MediaRef {
   storageKey: string;
   mime?: string;
   sizeBytes?: number;
+  // Where/when the shot was actually taken (read from the phone at capture).
+  gpsLat?: number;
+  gpsLng?: number;
+  gpsAccuracyM?: number;
+  capturedAt?: string;
 }
 export interface SubmissionItemInput {
   templateItemId: string;
@@ -74,7 +79,18 @@ export interface SubmissionDetail extends SubmissionSummary {
     dwellMs: number | null; // time spent on this step
     sequence: number | null; // order it was completed in
     paceFlag: boolean; // too fast for its type
-    media: { id: string; kind: string; storageKey: string; viewUrl: string; mime: string | null }[];
+    media: {
+      id: string;
+      kind: string;
+      storageKey: string;
+      viewUrl: string;
+      mime: string | null;
+      capturedAt?: string | null;
+      gpsLat?: number | null;
+      gpsLng?: number | null;
+      distanceM?: number | null;
+      geoFlag?: boolean;
+    }[];
   }[];
   reviews: { id: string; decision: string; comment: string | null; reviewer?: string; reviewedAt: string }[];
 }
