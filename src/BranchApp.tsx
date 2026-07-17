@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Api, Checklist, ChecklistItem, MediaRef, Me, SubmissionItemInput, uploadToBlob } from './api';
 
 // All Stories branches (Dynamics 365 BC store codes S0001–S0025). Mirrors the
@@ -71,6 +71,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
   // first completed, used to derive per-item dwell + order at submit time.
   const [session, setSession] = useState<{ sessionId: string; startedAtMs: number } | null>(null);
   const [completedAt, setCompletedAt] = useState<Record<string, number>>({});
+  // Which item (if any) is currently capturing through the in-app camera.
+  const [cam, setCam] = useState<{ item: ChecklistItem; kind: 'photo' | 'video' } | null>(null);
+  const branchLabel = DEMO_BRANCHES.find((b) => b.id === branchId)?.name || me?.branch?.name || branchId;
 
   useEffect(() => {
     if (me?.branch?.id) setBranchId(me.branch.id);
@@ -207,7 +210,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
             onCheck={(val) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueCheck: val } }))}
             onNumber={(n) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueNumber: Number.isNaN(n) ? undefined : n } }))}
             onText={(t) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueText: t } }))}
-            onCapture={capture} />
+            onCamera={(it, kind) => setCam({ item: it, kind })} />
         ))}
         <div className="submitbar">
           <div className="txt">{missing.length ? `${missing.length} required item(s) left` : 'All required items complete ✓'}</div>
@@ -215,6 +218,14 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
             {busy === 'submit' ? 'Submitting…' : 'Submit to Head Office'}
           </button>
         </div>
+        {cam && (
+          <CameraCapture
+            kind={cam.kind}
+            branchName={branchLabel}
+            onCancel={() => setCam(null)}
+            onCapture={(file) => { const c = cam; setCam(null); capture(c.item, c.kind, file); }}
+          />
+        )}
       </>
     );
   }
@@ -263,7 +274,7 @@ function ItemRow(props: {
   onCheck: (v: 'pass' | 'fail') => void;
   onNumber: (n: number) => void;
   onText: (t: string) => void;
-  onCapture: (item: ChecklistItem, kind: 'photo' | 'video', file: File) => void;
+  onCamera: (item: ChecklistItem, kind: 'photo' | 'video') => void;
 }) {
   const { item, value } = props;
   const done = isFilled(item, value);
@@ -305,13 +316,209 @@ function ItemRow(props: {
       )}
       {(item.type === 'photo' || item.type === 'video') && (
         <div className="control"><div className="capture">
-          <label className={`capbtn ${item.type === 'video' ? 'video' : ''}`}>
+          <button className={`capbtn ${item.type === 'video' ? 'video' : ''}`}
+            onClick={() => props.onCamera(item, item.type as 'photo' | 'video')}>
             {item.type === 'photo' ? '📷' : '🎥'} {props.busy ? 'Uploading…' : value?.media?.length ? 'Retake' : item.type === 'photo' ? 'Take photo' : 'Record video'}
-            <input type="file" accept={item.type === 'photo' ? 'image/*' : 'video/*'} capture="environment"
-              onChange={(e) => e.target.files?.[0] && props.onCapture(item, item.type as 'photo' | 'video', e.target.files[0])} />
-          </label>
-          {value?.media?.length ? <span className="captured-tag">✓ captured</span> : null}
+          </button>
+          {value?.media?.length ? <span className="captured-tag">✓ captured · stamped</span> : null}
         </div></div>
+      )}
+    </div>
+  );
+}
+
+type Geo = { lat: number; lng: number; acc: number };
+
+function pickVideoMime(): string {
+  const opts = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  const MR: any = typeof MediaRecorder !== 'undefined' ? MediaRecorder : null;
+  if (MR && MR.isTypeSupported) for (const o of opts) if (MR.isTypeSupported(o)) return o;
+  return 'video/webm';
+}
+
+// In-app camera. Captures a live photo or video (no gallery/file picker so an old
+// or off-site file can't be attached), reads GPS at the moment of capture, and
+// burns the branch name, date/time and coordinates onto the frame as proof.
+function CameraCapture({
+  kind,
+  branchName,
+  onCancel,
+  onCapture,
+}: {
+  kind: 'photo' | 'video';
+  branchName: string;
+  onCancel: () => void;
+  onCapture: (file: File) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recRef = useRef<MediaRecorder | null>(null);
+  const rafRef = useRef<number>(0);
+  const chunksRef = useRef<Blob[]>([]);
+  const [ready, setReady] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [geo, setGeo] = useState<Geo | null>(null);
+  const [geoState, setGeoState] = useState<'pending' | 'ok' | 'off'>('pending');
+  const [recording, setRecording] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera API not available on this device/browser.');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: kind === 'video',
+        });
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.muted = true;
+          await videoRef.current.play().catch(() => {});
+        }
+        setReady(true);
+      } catch (e: any) {
+        setErr('Camera unavailable — please allow camera access on this phone, then reopen. (' + (e?.message || e) + ')');
+      }
+    })();
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (p) => { setGeo({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }); setGeoState('ok'); },
+        () => setGeoState('off'),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+      );
+    } else {
+      setGeoState('off');
+    }
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafRef.current);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, [kind]);
+
+  function drawStamp(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    const lines = [
+      branchName,
+      new Date().toLocaleString(),
+      geo ? `GPS ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} (±${Math.round(geo.acc)}m)` : 'GPS unavailable',
+    ];
+    const pad = Math.round(w * 0.02);
+    const fs = Math.max(13, Math.round(w * 0.026));
+    ctx.font = `600 ${fs}px Arial, Helvetica, sans-serif`;
+    const barH = pad * 2 + lines.length * (fs + 5);
+    ctx.fillStyle = 'rgba(14,36,26,0.62)';
+    ctx.fillRect(0, h - barH, w, barH);
+    ctx.fillStyle = '#eaf3ee';
+    ctx.textBaseline = 'top';
+    lines.forEach((ln, i) => ctx.fillText(ln, pad, h - barH + pad + i * (fs + 5)));
+  }
+
+  function stopStream() {
+    cancelAnimationFrame(rafRef.current);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+  }
+
+  function takePhoto() {
+    const v = videoRef.current, c = canvasRef.current;
+    if (!v || !c || !v.videoWidth) return;
+    const w = v.videoWidth, h = v.videoHeight;
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(v, 0, 0, w, h);
+    drawStamp(ctx, w, h);
+    c.toBlob((blob) => {
+      if (!blob) { setErr('Could not capture image, please try again.'); return; }
+      stopStream();
+      onCapture(new File([blob], `photo_${new Date().toISOString().replace(/[:.]/g, '-')}.jpg`, { type: 'image/jpeg' }));
+    }, 'image/jpeg', 0.9);
+  }
+
+  function startVideo() {
+    const v = videoRef.current, c = canvasRef.current;
+    if (!v || !c || !v.videoWidth) return;
+    const w = v.videoWidth, h = v.videoHeight;
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+    const draw = () => {
+      ctx.drawImage(v, 0, 0, w, h);
+      drawStamp(ctx, w, h);
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+    let canvasStream: MediaStream;
+    try {
+      canvasStream = (c as any).captureStream(30);
+    } catch {
+      setErr('Video recording is not supported on this browser.');
+      return;
+    }
+    (streamRef.current?.getAudioTracks() || []).forEach((t) => canvasStream.addTrack(t));
+    const mime = pickVideoMime();
+    let rec: MediaRecorder;
+    try {
+      rec = new MediaRecorder(canvasStream, { mimeType: mime });
+    } catch {
+      setErr('Video recording is not supported on this browser.');
+      return;
+    }
+    chunksRef.current = [];
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunksRef.current.push(e.data); };
+    rec.onstop = () => {
+      cancelAnimationFrame(rafRef.current);
+      const blob = new Blob(chunksRef.current, { type: mime });
+      stopStream();
+      const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+      onCapture(new File([blob], `video_${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`, { type: mime }));
+    };
+    recRef.current = rec;
+    rec.start();
+    setRecording(true);
+  }
+
+  function stopVideo() {
+    recRef.current?.stop();
+    setRecording(false);
+  }
+
+  const geoLabel = geoState === 'ok' && geo
+    ? `📍 ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}`
+    : geoState === 'pending' ? '📍 locating…' : '📍 location off';
+
+  return (
+    <div className="camoverlay">
+      {err ? (
+        <div className="camerr">
+          <p>{err}</p>
+          <button className="camtext" onClick={() => { stopStream(); onCancel(); }}>Close</button>
+        </div>
+      ) : (
+        <>
+          <video ref={videoRef} playsInline autoPlay muted />
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          <div className="camtop">
+            <span>{branchName}</span>
+            <span className={`camgeo ${geoState === 'ok' ? 'ok' : geoState === 'off' ? 'bad' : ''}`}>{geoLabel}</span>
+          </div>
+          <div className="camhint">
+            {recording ? 'Recording — tap the button to stop' : kind === 'photo' ? 'Live photo · stamped with branch, time & GPS' : 'Live video · stamped with branch, time & GPS'}
+          </div>
+          <div className="cambar">
+            <button className="camtext" onClick={() => { stopStream(); onCancel(); }}>Cancel</button>
+            {kind === 'photo' ? (
+              <button className="shutter" disabled={!ready} onClick={takePhoto} aria-label="Take photo" />
+            ) : recording ? (
+              <button className="shutter rec" onClick={stopVideo} aria-label="Stop recording" />
+            ) : (
+              <button className="shutter" disabled={!ready} onClick={startVideo} aria-label="Start recording" />
+            )}
+            <span style={{ width: 60 }} />
+          </div>
+        </>
       )}
     </div>
   );
