@@ -13,6 +13,33 @@ import {
 import { createApi, Me } from './api';
 import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
+import { Escalations } from './Escalations';
+import { EscalationSettings } from './EscalationSettings';
+
+// Roles allowed to edit escalation settings (everyone HQ can see the board).
+const SETTINGS_ROLES = ['admin', 'head_office'];
+
+function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
+  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings'>('submissions');
+  const canSettings = !!me && SETTINGS_ROLES.includes(me.role);
+  const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
+    <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
+      {label}
+    </button>
+  );
+  return (
+    <>
+      <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <Tab id="submissions" label="Live submissions" />
+        <Tab id="escalations" label="Escalations" />
+        {canSettings && <Tab id="settings" label="⚙ Settings" />}
+      </div>
+      {tab === 'submissions' && <HeadOffice api={api} />}
+      {tab === 'escalations' && <Escalations api={api} />}
+      {tab === 'settings' && canSettings && <EscalationSettings api={api} />}
+    </>
+  );
+}
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:3000/v1';
 
@@ -153,7 +180,7 @@ function Shell() {
           <>
             {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
             {error && <div className="err">{error}</div>}
-            {!me || !HQ_ROLES.includes(me.role) ? <BranchApp api={api} me={me} /> : <HeadOffice api={api} />}
+            {!me || !HQ_ROLES.includes(me.role) ? <BranchApp api={api} me={me} /> : <HeadOfficeShell api={api} me={me} />}
           </>
         )}
       </main>
