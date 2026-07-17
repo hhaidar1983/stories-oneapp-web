@@ -133,6 +133,15 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .card.soon:hover { transform: none; border-color: var(--line); box-shadow: var(--shadow); }
 .menuback { margin-bottom: 14px; }
 
+/* Compact launcher tiles — small windows sitting beside each other. */
+.applauncher { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.appcard { padding: 13px 13px 14px; border-radius: 13px; }
+.appcard .cicon { font-size: 21px; margin-bottom: 5px; }
+.appcard h3 { font-size: 13.5px; }
+.appcard .sub { font-size: 11px; margin-bottom: 0; }
+.appcard .badge { font-size: 8.5px; padding: 3px 7px; top: 10px; right: 10px; }
+@media (max-width: 640px) { .applauncher { grid-template-columns: repeat(2, 1fr); } }
+
 /* --- Mobile / phone layout --- */
 @media (max-width: 640px) {
   .app { padding: 0 12px 90px; }
