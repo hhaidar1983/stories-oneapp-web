@@ -133,6 +133,25 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .card.soon:hover { transform: none; border-color: var(--line); box-shadow: var(--shadow); }
 .menuback { margin-bottom: 14px; }
 
+/* --- In-app camera (live capture + GPS + burned-in watermark) --- */
+.camoverlay { position: fixed; inset: 0; z-index: 80; background: #000; display: flex; flex-direction: column; }
+.camoverlay video { flex: 1; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.camtop { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 16px 12px; color: #fff; font-size: 13px; font-weight: 600;
+  background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0)); }
+.camgeo { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 20px; background: rgba(255,255,255,.18); white-space: nowrap; }
+.camgeo.ok { background: rgba(11,122,67,.9); }
+.camgeo.bad { background: rgba(208,59,59,.9); }
+.camhint { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; color: #eaf3ee; font-size: 12px; opacity: .85; padding: 0 20px; }
+.cambar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px calc(24px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.55)); }
+.shutter { width: 72px; height: 72px; border-radius: 50%; background: #fff; border: 5px solid rgba(255,255,255,.55); box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+.shutter:disabled { opacity: .5; }
+.shutter.rec { background: #d03b3b; border-color: rgba(255,255,255,.55); }
+.camtext { color: #fff; font-size: 15px; font-weight: 600; background: none; padding: 8px; min-width: 60px; text-align: left; }
+.camerr { margin: auto; color: #fff; text-align: center; padding: 40px 26px; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+.camerr .camtext { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 22px; text-align: center; }
+
 /* Compact launcher tiles — small windows sitting beside each other. */
 .applauncher { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .appcard { padding: 13px 13px 14px; border-radius: 13px; }
