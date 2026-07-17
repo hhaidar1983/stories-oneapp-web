@@ -1,17 +1,40 @@
 import { useEffect, useState } from 'react';
 import { Api, Checklist, ChecklistItem, MediaRef, Me, SubmissionItemInput, uploadToBlob } from './api';
 
-// Demo branch list (production uses the user's home branch from /me).
+// All Stories branches (Dynamics 365 BC store codes S0001–S0025). Mirrors the
+// backend seed so the picker lists every branch; defaults to the signed-in
+// user's home branch when they have one.
 const DEMO_BRANCHES = [
-  { id: 'sour', name: 'Stories — Sour' },
-  { id: 'saida', name: 'Stories — Saida' },
-  { id: 'khalde', name: 'Stories — Khalde' },
-  { id: 'ach', name: 'Stories — Achrafieh' },
-  { id: 'ham', name: 'Stories — Hamra' },
-  { id: 'jal', name: 'Stories — Jal el Dib' },
-  { id: 'dbay', name: 'Stories — Dbayeh' },
-  { id: 'verd', name: 'Stories — Verdun' },
+  { id: 'S0001', name: 'Store 1 — Jnah' },
+  { id: 'S0002', name: 'Ramlet El Bayda' },
+  { id: 'S0003', name: 'Verdun 2' },
+  { id: 'S0004', name: 'Cubic — Sin el Fil' },
+  { id: 'S0005', name: 'Khalde 1 — MATTA' },
+  { id: 'S0006', name: 'Dunes' },
+  { id: 'S0007', name: 'Khalde 2 — Drive Thru' },
+  { id: 'S0008', name: 'Ain Mreisseh' },
+  { id: 'S0009', name: 'Airport Road' },
+  { id: 'S0010', name: 'Zalqa' },
+  { id: 'S0011', name: 'Antelias' },
+  { id: 'S0012', name: 'Le Mall' },
+  { id: 'S0013', name: 'Kaslik' },
+  { id: 'S0014', name: 'Mansourieh' },
+  { id: 'S0015', name: 'Batroun' },
+  { id: 'S0016', name: 'Aley' },
+  { id: 'S0017', name: 'Rawche — Arjan' },
+  { id: 'S0018', name: 'Amioun' },
+  { id: 'S0019', name: 'Centromall' },
+  { id: 'S0020', name: 'Rabieh — BAYADA' },
+  { id: 'S0021', name: 'Saida' },
+  { id: 'S0022', name: 'Tyre' },
+  { id: 'S0023', name: 'Jbeil' },
+  { id: 'S0024', name: 'Broumana' },
+  { id: 'S0025', name: 'Store 25' },
 ];
+
+// Checklists run in shift order — opening, then handover, then closing —
+// regardless of what order the API returns them in.
+const CHECKLIST_ORDER: Record<string, number> = { opening: 0, handover: 1, closing: 2 };
 
 type Value = { valueCheck?: 'pass' | 'fail'; valueNumber?: number; valueText?: string; media?: MediaRef[] };
 type Values = Record<string, Value>;
@@ -200,8 +223,8 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     <>
       <div className="ctxbar">
         <div>
-          <select value={branchId} onChange={(e) => setBranchId(e.target.value)} disabled={!!me?.branch}>
-            {(me?.branch ? [{ id: me.branch.id, name: me.branch.name }] : DEMO_BRANCHES).map((b) => (
+          <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+            {DEMO_BRANCHES.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
@@ -211,7 +234,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       {error && <div className="err">{error}</div>}
       <div className="sectionlabel">Today's checklists</div>
       <div className="cards">
-        {checklists.map((c) => {
+        {[...checklists]
+          .sort((a, b) => (CHECKLIST_ORDER[a.key] ?? 9) - (CHECKLIST_ORDER[b.key] ?? 9))
+          .map((c) => {
           const p = progress(c, values);
           return (
             <div key={c.id} className="card" onClick={() => openChecklist(c)}>
