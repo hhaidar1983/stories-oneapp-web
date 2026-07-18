@@ -73,6 +73,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
   const [completedAt, setCompletedAt] = useState<Record<string, number>>({});
   // Which item (if any) is currently capturing through the in-app camera.
   const [cam, setCam] = useState<{ item: ChecklistItem; kind: 'photo' | 'video' } | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const branchLabel = DEMO_BRANCHES.find((b) => b.id === branchId)?.name || me?.branch?.name || branchId;
 
   useEffect(() => {
@@ -211,13 +212,37 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
           <span className="prog">{p.done}/{p.total} · {p.pct}%</span>
         </div>
         {error && <div className="err">{error}</div>}
-        {open.items.map((item) => (
-          <ItemRow key={item.id} item={item} value={values[item.id]} busy={busy === item.id}
-            onCheck={(val) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueCheck: val } }))}
-            onNumber={(n) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueNumber: Number.isNaN(n) ? undefined : n } }))}
-            onText={(t) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueText: t } }))}
-            onCamera={(it, kind) => setCam({ item: it, kind })} />
-        ))}
+        {(() => {
+          const out: any[] = [];
+          let cur: string | null = null;
+          open.items.forEach((item) => {
+            const section = item.hint || 'Checklist';
+            if (section !== cur) {
+              cur = section;
+              const secItems = open.items.filter((i) => (i.hint || 'Checklist') === section);
+              const req = secItems.filter((i) => i.required);
+              const done = req.filter((i) => isFilled(i, values[i.id])).length;
+              const col = !!collapsed[section];
+              out.push(
+                <div key={'sec-' + section} className="checklist-section" onClick={() => setCollapsed((c) => ({ ...c, [section]: !c[section] }))}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', margin: '18px 0 8px', padding: '9px 12px', background: 'var(--panel, #12241c)', border: '1px solid var(--line, #21372c)', borderRadius: 8 }}>
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{col ? '▸' : '▾'} {section}</span>
+                  <span style={{ fontSize: 12, opacity: 0.65 }}>{done}/{req.length}</span>
+                </div>,
+              );
+            }
+            if (!collapsed[section]) {
+              out.push(
+                <ItemRow key={item.id} item={item} value={values[item.id]} busy={busy === item.id}
+                  onCheck={(val) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueCheck: val } }))}
+                  onNumber={(n) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueNumber: Number.isNaN(n) ? undefined : n } }))}
+                  onText={(t) => setValues((v) => ({ ...v, [item.id]: { ...v[item.id], valueText: t } }))}
+                  onCamera={(it, kind) => setCam({ item: it, kind })} />,
+              );
+            }
+          });
+          return out;
+        })()}
         <div className="submitbar">
           <div className="txt">{missing.length ? `${missing.length} required item(s) left` : 'All required items complete ✓'}</div>
           <button className="primary" disabled={missing.length > 0 || busy === 'submit'} onClick={submit}>
@@ -295,7 +320,7 @@ function ItemRow(props: {
         <span style={{ color: done ? 'var(--green)' : 'var(--line)', fontSize: 18 }}>{done ? '✓' : '○'}</span>
         <div style={{ flex: 1 }}>
           <div className="lbl">{item.label}</div>
-          {item.hint && <div className="hint">{item.hint}</div>}
+          
         </div>
         <span className={item.required ? 'req' : 'opt'}>{item.required ? 'REQUIRED' : 'OPTIONAL'}</span>
       </div>
