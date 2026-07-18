@@ -15,9 +15,14 @@ import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 import { Escalations } from './Escalations';
 import { EscalationSettings } from './EscalationSettings';
+import { Login } from './Login';
+import { FaceEnroll } from './FaceEnroll';
 
 // Roles allowed to edit escalation settings (everyone HQ can see the board).
 const SETTINGS_ROLES = ['admin', 'head_office'];
+
+// Roles allowed to enroll staff faces / set PINs (matches the backend guard).
+const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager', 'branch_manager'];
 
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
   const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings'>('submissions');
@@ -66,6 +71,9 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
   const [ready, setReady] = useState(!msalEnabled);
   const [account, setAccount] = useState<import('@azure/msal-browser').AccountInfo | null>(null);
   const [devUserId, setDevUserId] = useState(DEMO_USERS[0].id);
+  const [token, setToken] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? window.localStorage.getItem('stories.session') : null,
+  );
 
   useEffect(() => {
     if (!msalEnabled || !pca) return;
@@ -82,21 +90,32 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
       mode: msalEnabled ? 'msal' : 'demo',
       ready,
       account,
-      signedIn: msalEnabled ? !!account : true,
+      // Signed in by a face/PIN token, by Microsoft, or (dev only) always.
+      signedIn: !!token || (msalEnabled ? !!account : true),
       devUserId,
       setDevUserId,
+      sessionToken: token,
+      loginWithToken: (t: string) => {
+        if (typeof window !== 'undefined') window.localStorage.setItem('stories.session', t);
+        setToken(t);
+      },
       login: async () => {
         if (!pca) return;
         const res = await pca.loginPopup({ scopes: apiScope ? [apiScope] : ['User.Read'] });
         setAccount(res.account);
       },
       logout: () => {
+        // Clear any face/PIN session first.
+        if (typeof window !== 'undefined') window.localStorage.removeItem('stories.session');
+        setToken(null);
         // Only clear the UI once logout actually completes; a cancelled logout
         // keeps the session (consistent with what's still in the MSAL cache).
         if (pca && account) pca.logoutPopup({ account }).then(() => setAccount(null)).catch(() => {});
         else setAccount(null);
       },
       authHeaders: async (): Promise<Record<string, string>> => {
+        // A face/PIN session token wins when present.
+        if (token) return { Authorization: `Bearer ${token}` };
         if (!msalEnabled) return { 'x-user-id': devUserId };
         if (!pca || !account) return {};
         const scopes = apiScope ? [apiScope] : ['User.Read'];
@@ -119,14 +138,45 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
         }
       },
     }),
-    [ready, account, devUserId],
+    [ready, account, devUserId, token],
   );
 
   if (!ready) return <div className="center">Loading…</div>;
   return <AuthContext.Provider value={auth}>{children(auth)}</AuthContext.Provider>;
 }
 
-function Hub({ onOpen }: { onOpen: (key: string) => void }) { return h('div', null, h('div', { className: 'sectionlabel' }, 'Stories staff apps'), h('div', { className: 'cards applauncher' }, APP_TILES.map((a) => h('div', { key: a.key, className: 'card appcard ' + (a.live || a.url ? '' : 'soon'), onClick: () => { if (a.url) window.open(a.url, '_blank', 'noopener'); else if (a.live) onOpen(a.key); } }, h('span', { className: 'badge ' + (a.live || a.url ? 'b-done' : 'b-todo') }, a.live || a.url ? 'OPEN' : 'COMING SOON'), h('div', { className: 'cicon' }, a.icon), h('h3', null, a.name), h('div', { className: 'sub' }, a.sub))))); }
+function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
+  const tiles: AppTile[] = [...APP_TILES];
+  if (me && MANAGER_ROLES.includes(me.role)) {
+    tiles.push({ key: 'faceenroll', icon: '🧑‍💼', name: 'Staff Face Setup', sub: 'Enroll faces & set login PINs', live: true });
+  }
+  return h(
+    'div',
+    null,
+    h('div', { className: 'sectionlabel' }, 'Stories staff apps'),
+    h(
+      'div',
+      { className: 'cards applauncher' },
+      tiles.map((a) =>
+        h(
+          'div',
+          {
+            key: a.key,
+            className: 'card appcard ' + (a.live || a.url ? '' : 'soon'),
+            onClick: () => {
+              if (a.url) window.open(a.url, '_blank', 'noopener');
+              else if (a.live) onOpen(a.key);
+            },
+          },
+          h('span', { className: 'badge ' + (a.live || a.url ? 'b-done' : 'b-todo') }, a.live || a.url ? 'OPEN' : 'COMING SOON'),
+          h('div', { className: 'cicon' }, a.icon),
+          h('h3', null, a.name),
+          h('div', { className: 'sub' }, a.sub),
+        ),
+      ),
+    ),
+  );
+}
 
 function Shell() {
   const auth = useAuth();
@@ -165,17 +215,25 @@ function Shell() {
             </select>
           ) : auth.signedIn ? (
             <button onClick={auth.logout}>Sign out</button>
-          ) : (
-            <button onClick={auth.login}>Sign in</button>
-          )}
+          ) : null}
         </div>
       </header>
 
       <main>
         {!auth.signedIn ? (
-          <div className="center">Sign in with your Stories account to continue.</div>
+          <Login
+            api={api}
+            onToken={auth.loginWithToken}
+            onMicrosoft={auth.login}
+            microsoftEnabled={auth.mode === 'msal'}
+          />
         ) : !openApp ? (
-          Hub({ onOpen: setOpenApp })
+          Hub({ onOpen: setOpenApp, me })
+        ) : openApp === 'faceenroll' ? (
+          <>
+            {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
+            <FaceEnroll api={api} />
+          </>
         ) : (
           <>
             {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
