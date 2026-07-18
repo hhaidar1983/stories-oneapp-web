@@ -22,7 +22,7 @@ import { FaceEnroll } from './FaceEnroll';
 const SETTINGS_ROLES = ['admin', 'head_office'];
 
 // Roles allowed to enroll staff faces / set PINs (matches the backend guard).
-const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager', 'branch_manager'];
+const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager'];
 
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
   const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings'>('submissions');
