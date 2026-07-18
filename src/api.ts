@@ -270,7 +270,23 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
       }),
     setPin: (staffId: string, pin: string) =>
       req<{ ok: boolean }>('/faceauth/set-pin', { method: 'POST', body: JSON.stringify({ staffId, pin }) }),
+    importStaff: (staff: StaffImportRow[]) =>
+      req<StaffImportResult>('/faceauth/import', { method: 'POST', body: JSON.stringify({ staff }) }),
   };
+}
+
+export interface StaffImportRow {
+  staffCode?: string;
+  name: string;
+  role?: string;
+  branch?: string;
+}
+export interface StaffImportResult {
+  total: number;
+  created: number;
+  updated: number;
+  branchesCreated: number;
+  skipped: number;
 }
 
 export type Api = ReturnType<typeof createApi>;
