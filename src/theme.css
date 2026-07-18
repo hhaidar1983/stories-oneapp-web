@@ -222,3 +222,59 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
   td:nth-child(6)::before { content: "Time"; }
   td:first-child { font-size: 15px; font-weight: 700; padding-top: 12px; }
 }
+
+
+/* ---- Face / PIN login + enrollment (Stage 3) ---------------------------- */
+.loginwrap { max-width: 460px; margin: 24px auto; padding: 8px 16px 32px; text-align: center; }
+.logintitle { font-size: 24px; font-weight: 800; color: #123524; margin: 8px 0 4px; }
+.loginsub { color: #4a5a52; margin: 0 0 20px; }
+.loginbtns { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.bigbtn { display: flex; align-items: center; gap: 12px; justify-content: center;
+  padding: 18px 20px; border-radius: 14px; border: 1px solid #d5e2da; background: #fff;
+  font-size: 17px; font-weight: 600; color: #123524; cursor: pointer; transition: transform .06s, box-shadow .15s; }
+.bigbtn:hover { box-shadow: 0 4px 16px rgba(18,53,36,.12); }
+.bigbtn:active { transform: translateY(1px); }
+.bigbtn.primary { background: #123524; color: #eaf3ee; border-color: #123524; }
+.bigbtn.subtle { background: #f4f8f6; color: #365; font-weight: 500; }
+.bigicon { font-size: 22px; }
+
+.stafflist { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.staffrow { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 16px; border-radius: 12px; border: 1px solid #dce7e1; background: #fff;
+  cursor: pointer; text-align: left; width: 100%; }
+.staffrow:hover { background: #f4f8f6; }
+.staffrow.enroll { cursor: default; }
+.staffname { font-weight: 600; color: #123524; }
+.staffbranch { color: #6a7a72; font-size: 13px; }
+.staffmeta { display: flex; flex-direction: column; gap: 2px; }
+.staffactions { display: flex; gap: 8px; flex-shrink: 0; }
+.minibtn { padding: 8px 14px; border-radius: 9px; border: 1px solid #cddbd3; background: #fff;
+  font-weight: 600; font-size: 14px; color: #123524; cursor: pointer; }
+.minibtn.primary { background: #123524; color: #eaf3ee; border-color: #123524; }
+.minibtn:disabled { opacity: .5; cursor: default; }
+.okmsg { color: #1a7f4b; font-size: 13px; font-weight: 600; }
+.err.inline { display: inline; padding: 0; background: none; margin: 0; font-size: 13px; }
+
+.pindots { display: flex; gap: 12px; justify-content: center; margin: 18px 0 22px; }
+.pindot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #123524; background: transparent; }
+.pindot.on { background: #123524; }
+.pindot.opt { border-color: #b8c9c0; }
+.pinpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto; }
+.pinkey { padding: 18px 0; font-size: 22px; font-weight: 600; border-radius: 12px;
+  border: 1px solid #dce7e1; background: #fff; color: #123524; cursor: pointer; }
+.pinkey:hover { background: #f4f8f6; }
+.pinkey:disabled { opacity: .4; cursor: default; }
+.pinkey.ok { background: #123524; color: #eaf3ee; border-color: #123524; }
+.pinkey.del { color: #8a6; }
+
+.livenessbox { max-width: 460px; margin: 0 auto; border-radius: 16px; overflow: hidden; }
+.search { width: 100%; box-sizing: border-box; padding: 12px 14px; margin: 8px 0 14px;
+  border-radius: 10px; border: 1px solid #d5e2da; font-size: 15px; }
+
+.modalback { position: fixed; inset: 0; background: rgba(10,20,15,.45);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.modal { background: #fff; border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; }
+.modal h3 { margin: 0 0 4px; color: #123524; }
+.modalbtns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; align-items: center; }
+.pininput { width: 100%; box-sizing: border-box; padding: 14px; font-size: 24px; letter-spacing: 8px;
+  text-align: center; border-radius: 10px; border: 1px solid #cddbd3; }
