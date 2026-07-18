@@ -34,6 +34,10 @@ export interface Auth {
   setDevUserId: (id: string) => void;
   login: () => Promise<void>;
   logout: () => void;
+  /** Face / PIN session token (our own JWT), when signed in that way. */
+  sessionToken: string | null;
+  /** Store a face/PIN session token and treat the user as signed in. */
+  loginWithToken: (token: string) => void;
   /** Headers that authenticate an API request (Bearer token or dev x-user-id). */
   authHeaders: () => Promise<Record<string, string>>;
 }
