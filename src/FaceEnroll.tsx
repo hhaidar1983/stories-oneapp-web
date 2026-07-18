@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Api, SessionUser } from './api';
+import type { Api, SessionUser, StaffImportRow, StaffImportResult } from './api';
 import { LivenessCheck } from './LivenessCheck';
 
-// Manager screen: capture each staff member's face (with a live liveness check)
-// so they can log in by face, and optionally set a fallback PIN.
+// Manager screen: import the staff roster, capture each staff member's face
+// (with a live liveness check) so they can log in by face, and optionally set a
+// fallback PIN.
 export function FaceEnroll({ api }: { api: Api }) {
   const [staff, setStaff] = useState<SessionUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -12,6 +13,7 @@ export function FaceEnroll({ api }: { api: Api }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const [pinFor, setPinFor] = useState<SessionUser | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +28,7 @@ export function FaceEnroll({ api }: { api: Api }) {
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, reload]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -68,32 +70,38 @@ export function FaceEnroll({ api }: { api: Api }) {
     <div>
       <div className="sectionlabel">Staff face &amp; PIN setup</div>
       {error && <div className="err">{error}</div>}
+
+      <ImportPanel api={api} onImported={() => setReload((n) => n + 1)} />
+
       <input className="search" placeholder="Search staff or branch…" value={query} onChange={(e) => setQuery(e.target.value)} />
       {!staff ? (
         <div className="center">Loading staff…</div>
       ) : (
-        <div className="stafflist">
-          {filtered.map((s) => (
-            <div key={s.id} className="staffrow enroll">
-              <div className="staffmeta">
-                <span className="staffname">{s.name}</span>
-                <span className="staffbranch">
-                  {s.role}
-                  {s.branch ? ` · ${s.branch.name}` : ''}
-                </span>
-                {note && note.id === s.id && <span className={note.ok ? 'okmsg' : 'err inline'}>{note.text}</span>}
+        <>
+          <div className="rostercount">{filtered.length} staff</div>
+          <div className="stafflist">
+            {filtered.map((s) => (
+              <div key={s.id} className="staffrow enroll">
+                <div className="staffmeta">
+                  <span className="staffname">{s.name}</span>
+                  <span className="staffbranch">
+                    {s.role}
+                    {s.branch ? ` · ${s.branch.name}` : ''}
+                  </span>
+                  {note && note.id === s.id && <span className={note.ok ? 'okmsg' : 'err inline'}>{note.text}</span>}
+                </div>
+                <div className="staffactions">
+                  <button className="minibtn primary" disabled={busy} onClick={() => setEnrolling(s)}>
+                    Enroll face
+                  </button>
+                  <button className="minibtn" disabled={busy} onClick={() => setPinFor(s)}>
+                    Set PIN
+                  </button>
+                </div>
               </div>
-              <div className="staffactions">
-                <button className="minibtn primary" disabled={busy} onClick={() => setEnrolling(s)}>
-                  Enroll face
-                </button>
-                <button className="minibtn" disabled={busy} onClick={() => setPinFor(s)}>
-                  Set PIN
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
       {pinFor && (
         <SetPinModal
@@ -108,6 +116,123 @@ export function FaceEnroll({ api }: { api: Api }) {
       )}
     </div>
   );
+}
+
+// Paste the POS roster export and load everyone in. Re-importing updates people
+// by their staff number instead of creating duplicates.
+function ImportPanel({ api, onImported }: { api: Api; onImported: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<StaffImportResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const parsed = useMemo(() => parseRoster(text), [text]);
+  const branches = useMemo(() => new Set(parsed.map((r) => r.branch).filter(Boolean)).size, [parsed]);
+
+  async function run() {
+    if (!parsed.length) return;
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await api.importStaff(parsed);
+      setResult(res);
+      onImported();
+    } catch (e) {
+      setError(msg(e) || 'Import failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="importpanel">
+      <button className="importtoggle" onClick={() => setOpen((o) => !o)}>
+        {open ? '▾' : '▸'} Import staff from POS
+      </button>
+      {open && (
+        <div className="importbody">
+          <p className="loginsub">
+            Paste your staff list from the POS export below. Each person loads in with their number, name, branch and
+            role. Re-pasting an updated list will update people, not duplicate them.
+          </p>
+          <textarea
+            className="importbox"
+            placeholder="Paste the staff list here…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+          />
+          {text.trim() && (
+            <div className="importpreview">
+              Found <b>{parsed.length}</b> staff across <b>{branches}</b> branches.
+              {parsed[0] && (
+                <span className="importsample">
+                  {' '}e.g. {parsed[0].name}
+                  {parsed[0].branch ? ` — ${parsed[0].branch}` : ''}
+                </span>
+              )}
+            </div>
+          )}
+          {error && <div className="err">{error}</div>}
+          {result && (
+            <div className="okmsg">
+              Done — {result.created} added, {result.updated} updated, {result.branchesCreated} new branches
+              {result.skipped ? `, ${result.skipped} skipped` : ''}.
+            </div>
+          )}
+          <button className="minibtn primary" disabled={busy || !parsed.length} onClick={run}>
+            {busy ? 'Importing…' : `Import ${parsed.length} staff`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Parse the POS roster. Handles two paste shapes:
+//  - tab-separated: one person per line (id, last, first, dup, position, storeCode, storeName)
+//  - one-value-per-line: a new record starts at each purely-numeric staff id,
+//    followed by last name, first name, (dup), position, storeCode?, storeName?
+function parseRoster(text: string): StaffImportRow[] {
+  if (!text.trim()) return [];
+  const rows: StaffImportRow[] = [];
+  if (text.includes('\t')) {
+    for (const line of text.split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      const c = line.split('\t').map((s) => s.trim());
+      const id = c[0];
+      if (!id || !/^\d+$/.test(id)) continue;
+      const last = c[1] || '';
+      const first = c[2] || '';
+      const storeName = c[6] || '';
+      rows.push({ staffCode: id, name: `${first} ${last}`.trim(), role: 'staff', branch: storeName });
+    }
+    return rows;
+  }
+  const lines = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+  let id = '';
+  let cur: string[] = [];
+  const flush = () => {
+    if (!id) return;
+    const last = cur[0] || '';
+    const first = cur[1] || '';
+    const storeName = cur[5] || '';
+    const name = `${first} ${last}`.trim();
+    if (name) rows.push({ staffCode: id, name, role: 'staff', branch: storeName });
+  };
+  for (const ln of lines) {
+    if (/^\d+$/.test(ln)) {
+      flush();
+      id = ln;
+      cur = [];
+    } else {
+      cur.push(ln);
+    }
+  }
+  flush();
+  return rows;
 }
 
 function SetPinModal({
