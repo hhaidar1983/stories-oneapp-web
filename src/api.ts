@@ -157,6 +157,40 @@ export interface EscalationRow {
   history: { level: number; at: string; action: string; by?: string; note?: string }[];
 }
 
+// --- Face / PIN login types --------------------------------------------------
+export interface LivenessSession {
+  sessionId: string;
+  region: string;
+}
+export interface LivenessCreds {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+  expiration?: string;
+  region: string;
+}
+/** Public user shape returned by face / PIN login and the staff roster. */
+export interface SessionUser {
+  id: string;
+  name: string;
+  role: string;
+  branch: { id: string; name: string; tier: string } | null;
+}
+export interface FaceLoginResult {
+  token: string;
+  user: SessionUser;
+  similarity: number;
+}
+export interface PinLoginResult {
+  token: string;
+  user: SessionUser;
+}
+export interface PinStaff {
+  id: string;
+  name: string;
+  branch: string | null;
+}
+
 export function createApi(base: string, authHeaders: () => Promise<Record<string, string>>) {
   async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const headers = {
@@ -217,6 +251,25 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
       req<unknown>(`/escalations/${id}/acknowledge`, { method: 'POST' }),
     resolveEscalation: (id: string, note?: string) =>
       req<unknown>(`/escalations/${id}/resolve`, { method: 'POST', body: JSON.stringify({ note }) }),
+    // --- Face recognition login (public) -----------------------------------
+    faceSession: () => req<LivenessSession>('/auth/face/session', { method: 'POST' }),
+    faceCreds: () => req<LivenessCreds>('/auth/face/creds', { method: 'POST' }),
+    faceLogin: (sessionId: string) =>
+      req<FaceLoginResult>('/auth/face/login', { method: 'POST', body: JSON.stringify({ sessionId }) }),
+    // --- PIN fallback login (public) ---------------------------------------
+    pinRoster: () => req<PinStaff[]>('/auth/pin/roster'),
+    pinLogin: (staffId: string, pin: string) =>
+      req<PinLoginResult>('/auth/pin/login', { method: 'POST', body: JSON.stringify({ staffId, pin }) }),
+    // --- Manager: enrollment + PIN management ------------------------------
+    staffList: () => req<SessionUser[]>('/faceauth/staff'),
+    enrollSession: () => req<LivenessSession>('/faceauth/enroll/session', { method: 'POST' }),
+    enroll: (staffId: string, sessionId: string) =>
+      req<{ ok: boolean; faceId: string }>('/faceauth/enroll', {
+        method: 'POST',
+        body: JSON.stringify({ staffId, sessionId }),
+      }),
+    setPin: (staffId: string, pin: string) =>
+      req<{ ok: boolean }>('/faceauth/set-pin', { method: 'POST', body: JSON.stringify({ staffId, pin }) }),
   };
 }
 
