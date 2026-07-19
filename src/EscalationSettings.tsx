@@ -36,6 +36,9 @@ export function EscalationSettings({ api }: { api: Api }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<string | null>(null);
+  const [testLevel, setTestLevel] = useState(1);
 
   useEffect(() => {
     api
@@ -85,6 +88,22 @@ export function EscalationSettings({ api }: { api: Api }) {
       setError(e.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestMsg(null);
+    try {
+      const r = await api.testEscalation({ level: testLevel });
+      const who = r.recipients.length
+        ? r.recipients.map((p) => p.name || p.email).filter(Boolean).join(', ')
+        : 'no one is assigned at this level yet';
+      setTestMsg('Sent a test to L' + r.level + ' (' + r.levelTitle + ') for ' + r.branch + '. Recipients: ' + who + '.');
+    } catch (e: any) {
+      setTestMsg('Test failed: ' + (e?.message || e));
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -261,6 +280,30 @@ export function EscalationSettings({ api }: { api: Api }) {
         <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
           In-app works now. Email &amp; WhatsApp deliver once their sending accounts are connected.
         </div>
+      </div>
+
+      <h3 style={{ margin: '14px 0 6px' }}>5 · Send a test alert</h3>
+      <div style={box}>
+        <div style={{ fontSize: 12.5, opacity: 0.7, marginBottom: 8 }}>
+          Fire a harmless test alert to check delivery. It routes exactly like a real one — Level 1 to
+          the branch's own manager, Level 2 to its area manager.
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13 }}>Send to</span>
+          <select style={inp} value={testLevel} onChange={(e) => setTestLevel(Number(e.target.value))}>
+            {cfg.levels.map((lv) => (
+              <option key={lv.level} value={lv.level}>
+                L{lv.level} · {lv.title}
+              </option>
+            ))}
+          </select>
+          <button disabled={testing} onClick={sendTest}>
+            {testing ? 'Sending…' : 'Send test alert'}
+          </button>
+        </div>
+        {testMsg && (
+          <div style={{ fontSize: 12.5, marginTop: 8, color: 'var(--green, #2ec16b)' }}>{testMsg}</div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
