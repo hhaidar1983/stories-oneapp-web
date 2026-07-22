@@ -78,6 +78,10 @@ export interface SubmissionDetail extends SubmissionSummary {
     inRange: boolean | null;
     valueText: string | null;
     flagged: boolean;
+    resolution: string | null;
+    resolutionNote: string | null;
+    resolvedByName: string | null;
+    resolvedAt: string | null;
     dwellMs: number | null; // time spent on this step
     sequence: number | null; // order it was completed in
     paceFlag: boolean; // too fast for its type
@@ -290,6 +294,11 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
     submission: (id: string) => req<SubmissionDetail>(`/submissions/${id}`),
     review: (id: string, body: { decision: string; comment?: string; itemFlags?: { submissionItemId: string; flag: boolean }[] }) =>
       req<{ id: string; status: string }>(`/submissions/${id}/review`, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }),
+    resolveItem: (submissionId: string, itemId: string, body: { action: 'fixed' | 'escalated'; note?: string }) =>
+      req<{ id: string; resolution: string }>(`/submissions/${submissionId}/items/${itemId}/resolve`, {
         method: 'POST',
         body: JSON.stringify(body),
       }),
