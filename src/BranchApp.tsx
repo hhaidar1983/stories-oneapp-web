@@ -413,6 +413,23 @@ function CameraCapture({
   const [geo, setGeo] = useState<Geo | null>(null);
   const [geoState, setGeoState] = useState<'pending' | 'ok' | 'off'>('pending');
   const [recording, setRecording] = useState(false);
+  const [recSecs, setRecSecs] = useState(0);
+  const recTimerRef = useRef<number>(0);
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(1);
+
+  useEffect(() => {
+    const stop = (e: any) => {
+      if (e.touches && e.touches.length > 1) e.preventDefault();
+    };
+    const gp = (e: any) => e.preventDefault();
+    document.addEventListener('touchmove', stop, { passive: false });
+    document.addEventListener('gesturestart', gp as any);
+    return () => {
+      document.removeEventListener('touchmove', stop);
+      document.removeEventListener('gesturestart', gp as any);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -470,6 +487,7 @@ function CameraCapture({
 
   function stopStream() {
     cancelAnimationFrame(rafRef.current);
+    window.clearInterval(recTimerRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
   }
 
@@ -480,7 +498,7 @@ function CameraCapture({
     c.width = w; c.height = h;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(v, 0, 0, w, h);
+    { const _z = zoomRef.current || 1; const _sw = w / _z, _sh = h / _z; ctx.drawImage(v, (w - _sw) / 2, (h - _sh) / 2, _sw, _sh, 0, 0, w, h); }
     drawStamp(ctx, w, h);
     const capturedAt = new Date().toISOString();
     c.toBlob((blob) => {
@@ -502,7 +520,7 @@ function CameraCapture({
     if (!ctx) return;
     const capturedAt = new Date().toISOString();
     const draw = () => {
-      ctx.drawImage(v, 0, 0, w, h);
+      { const _z = zoomRef.current || 1; const _sw = w / _z, _sh = h / _z; ctx.drawImage(v, (w - _sw) / 2, (h - _sh) / 2, _sw, _sh, 0, 0, w, h); }
       drawStamp(ctx, w, h);
       rafRef.current = requestAnimationFrame(draw);
     };
@@ -538,6 +556,8 @@ function CameraCapture({
     recRef.current = rec;
     rec.start();
     setRecording(true);
+    setRecSecs(0);
+    recTimerRef.current = window.setInterval(() => setRecSecs((s) => s + 1), 1000);
   }
 
   function stopVideo() {
@@ -558,12 +578,25 @@ function CameraCapture({
         </div>
       ) : (
         <>
-          <video ref={videoRef} playsInline autoPlay muted />
+          <video ref={videoRef} playsInline autoPlay muted style={{ transform: 'scale(' + zoom + ')', transformOrigin: 'center center', transition: 'transform 0.12s' }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
+          {ready && !err && (
+            <div style={{ position: 'absolute', bottom: 160, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, zIndex: 6 }}>
+              {[1, 2, 3].map((z) => (
+                <button key={z} onClick={() => { setZoom(z); zoomRef.current = z; }} style={{ background: zoom === z ? 'rgba(8,108,66,0.95)' : 'rgba(0,0,0,0.55)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: 999, padding: '6px 13px', fontSize: 14, fontWeight: 700 }}>{z}×</button>
+              ))}
+            </div>
+          )}
           <div className="camtop">
             <span>{branchName}</span>
             <span className={`camgeo ${geoState === 'ok' ? 'ok' : geoState === 'off' ? 'bad' : ''}`}>{geoLabel}</span>
           </div>
+          {recording && (
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(190,45,45,0.95)', color: '#fff', padding: '5px 14px', borderRadius: 999, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, zIndex: 6 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
+              REC {Math.floor(recSecs / 60)}:{String(recSecs % 60).padStart(2, '0')}
+            </div>
+          )}
           <div className="camhint">
             {recording ? 'Recording — tap the button to stop' : kind === 'photo' ? 'Live photo · stamped with branch, time & GPS' : 'Live video · stamped with branch, time & GPS'}
           </div>
