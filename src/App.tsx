@@ -10,7 +10,7 @@ import {
   pca,
   useAuth,
 } from './auth';
-import { createApi, Me } from './api';
+import { createApi, Me, BranchConfigRow } from './api';
 import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 import { Escalations } from './Escalations';
@@ -24,8 +24,136 @@ const SETTINGS_ROLES = ['admin', 'head_office'];
 // Roles allowed to enroll staff faces / set PINs (matches the backend guard).
 const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager'];
 
+const bsBox: React.CSSProperties = { background: 'var(--panel, #12241c)', border: '1px solid var(--line, #21372c)', borderRadius: 10, padding: 14, marginBottom: 14 };
+const bsLbl: React.CSSProperties = { fontSize: 11, opacity: 0.7, display: 'block', marginBottom: 4 };
+const bsInp: React.CSSProperties = { background: 'var(--panel2, #0d1a14)', color: 'inherit', border: '1px solid var(--line, #21372c)', borderRadius: 8, padding: '7px 9px', fontSize: 14, width: '100%', boxSizing: 'border-box' };
+
+function BSwitch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 44, height: 26, borderRadius: 999, border: 'none', cursor: 'pointer', background: on ? 'var(--brand, #0E8B55)' : 'var(--line, #3a4a42)', position: 'relative', transition: 'background .15s', flex: '0 0 auto' }}>
+      <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
+    </button>
+  );
+}
+
+function BRow({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
+      <span style={{ flex: 1, fontSize: 13 }}>{label}</span>
+      <BSwitch on={on} onChange={onChange} />
+    </div>
+  );
+}
+
+function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
+  const [rows, setRows] = useState<BranchConfigRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selId, setSelId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<BranchConfigRow | null>(null);
+  const [q, setQ] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    api.branchConfigs().then(setRows).catch((e: any) => setError(e.message));
+  }, [api]);
+
+  if (error) return <div className="err">{error}</div>;
+  if (!rows) return <div className="center">Loading branch settings…</div>;
+
+  const select = (r: BranchConfigRow) => { setSelId(r.branch_id); setDraft({ ...r }); setSaved(false); };
+  const patch = (p: Partial<BranchConfigRow>) => { setDraft({ ...(draft as BranchConfigRow), ...p }); setSaved(false); };
+
+  const save = async () => {
+    if (!draft) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const body = {
+        active: draft.active,
+        deadline_opening: draft.deadline_opening,
+        deadline_handover: draft.deadline_handover,
+        deadline_closing: draft.deadline_closing,
+        trig_not_submitted: draft.trig_not_submitted,
+        trig_low_completion: draft.trig_low_completion,
+        trig_flagged: draft.trig_flagged,
+        trig_rushed: draft.trig_rushed,
+        ch_email: draft.ch_email,
+        ch_whatsapp: draft.ch_whatsapp,
+      };
+      const out = await api.updateBranchConfig(draft.branch_id, body);
+      setRows((rows as BranchConfigRow[]).map((x) => (x.branch_id === out.branch_id ? out : x)));
+      setDraft(out);
+      setSaved(true);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filtered = rows.filter((r) => (r.branch_name || r.branch_id).toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <>
+      <div className="sectionlabel">Branch settings — triggers &amp; permissions</div>
+      <p style={{ fontSize: 12, opacity: 0.7, marginTop: -2, marginBottom: 12 }}>Per-branch alerting: master on/off, checklist deadlines (Beirut time), which triggers fire, and delivery channels. Changes apply on the engine's next check.</p>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 250px', minWidth: 230 }}>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search branches…" style={{ ...bsInp, marginBottom: 8 }} />
+          <div style={{ ...bsBox, padding: 4, maxHeight: 430, overflowY: 'auto' }}>
+            {filtered.map((r) => (
+              <button key={r.branch_id} type="button" onClick={() => select(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: r.branch_id === selId ? 'rgba(14,139,85,.16)' : 'transparent', border: 'none', color: 'inherit', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flex: '0 0 auto', background: r.active ? 'var(--brand, #0E8B55)' : '#8b978f' }} />
+                <span style={{ flex: 1, fontSize: 13 }}>{r.branch_name || r.branch_id}</span>
+                <span style={{ fontSize: 11, opacity: 0.5 }}>{r.branch_id}</span>
+              </button>
+            ))}
+            {filtered.length === 0 && <div style={{ padding: 12, fontSize: 12, opacity: 0.6 }}>No branches match.</div>}
+          </div>
+        </div>
+        <div style={{ flex: '1 1 320px', minWidth: 280 }}>
+          {!draft && <div style={{ ...bsBox, opacity: 0.7, fontSize: 13 }}>Select a branch to edit its settings.</div>}
+          {draft && (
+            <div style={bsBox}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700 }}>{draft.branch_name || draft.branch_id}</div>
+                  <div style={{ fontSize: 11, opacity: 0.6 }}>{draft.branch_id}</div>
+                </div>
+                <BSwitch on={draft.active} onChange={(v) => patch({ active: v })} />
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 12 }}>{draft.active ? 'Alerting ON for this branch' : 'Alerting OFF — no alerts will be sent'}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85, margin: '4px 0 6px' }}>Checklist deadlines</div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Opening</span><input type="time" value={draft.deadline_opening} onChange={(e) => patch({ deadline_opening: e.target.value })} style={bsInp} /></div>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Handover</span><input type="time" value={draft.deadline_handover} onChange={(e) => patch({ deadline_handover: e.target.value })} style={bsInp} /></div>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Closing</span><input type="time" value={draft.deadline_closing} onChange={(e) => patch({ deadline_closing: e.target.value })} style={bsInp} /></div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85, margin: '4px 0 2px' }}>Triggers</div>
+              <BRow label="Flagged evidence" on={draft.trig_flagged} onChange={(v) => patch({ trig_flagged: v })} />
+              <BRow label="Not submitted by deadline" on={draft.trig_not_submitted} onChange={(v) => patch({ trig_not_submitted: v })} />
+              <BRow label="Low completion" on={draft.trig_low_completion} onChange={(v) => patch({ trig_low_completion: v })} />
+              <BRow label="Rushed (too fast)" on={draft.trig_rushed} onChange={(v) => patch({ trig_rushed: v })} />
+              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.85, margin: '10px 0 2px' }}>Delivery channels</div>
+              <BRow label="Email" on={draft.ch_email} onChange={(v) => patch({ ch_email: v })} />
+              <BRow label="WhatsApp" on={draft.ch_whatsapp} onChange={(v) => patch({ ch_whatsapp: v })} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
+                <button type="button" onClick={save} disabled={saving} style={{ background: 'var(--brand, #0E8B55)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save changes'}</button>
+                {saved && <span style={{ fontSize: 12, color: 'var(--brand, #0E8B55)', fontWeight: 700 }}>Saved ✓</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+const DEMO_ADMIN = { id: 'ed73a968-ff2a-43cf-a966-11b49914fe91', name: 'Charbel N. — Head Office (Admin)' };
+
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
-  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings' | 'branches'>('submissions');
   const canSettings = !!me && SETTINGS_ROLES.includes(me.role);
   const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
     <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
@@ -38,10 +166,12 @@ function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: M
         <Tab id="submissions" label="Live submissions" />
         <Tab id="escalations" label="Escalations" />
         {canSettings && <Tab id="settings" label="⚙ Settings" />}
+            {canSettings && <Tab id="branches" label="Branch settings" />}
       </div>
       {tab === 'submissions' && <HeadOffice api={api} />}
       {tab === 'escalations' && <Escalations api={api} />}
       {tab === 'settings' && canSettings && <EscalationSettings api={api} />}
+          {tab === 'branches' && canSettings && <BranchSettings api={api} />}
     </>
   );
 }
@@ -207,7 +337,7 @@ function Shell() {
         <div className="authbox">
           {auth.mode === 'demo' ? (
             <select value={auth.devUserId} onChange={(e) => auth.setDevUserId(e.target.value)}>
-              {DEMO_USERS.map((u) => (
+              {[...DEMO_USERS, DEMO_ADMIN].map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
                 </option>
