@@ -247,7 +247,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
           });
           return out;
         })()}
-        <div className="submitbar">
+        <div className="submitbar" style={{ position: 'static' }}>
           <div className="txt">{missing.length ? `${missing.length} required item(s) left` : 'All required items complete ✓'}</div>
           <button className="primary" disabled={missing.length > 0 || busy === 'submit'} onClick={submit}>
             {busy === 'submit' ? 'Submitting…' : 'Submit to Head Office'}
