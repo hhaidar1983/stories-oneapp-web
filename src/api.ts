@@ -114,6 +114,32 @@ export interface ResolutionLogRow {
   resolutionNote: string | null;
 }
 
+export interface Recipient {
+  name: string;
+  email: string;
+  whatsapp: string;
+}
+export interface ExecConfig {
+  recipients: Recipient[];
+  channels: { inApp: boolean; email: boolean; whatsapp: boolean };
+  sendTime: string;
+  enabled: boolean;
+}
+export interface ExecSummaryData {
+  date: string;
+  totals: {
+    branchesReporting: number;
+    flaggedItems: number;
+    pending: number;
+    fixed: number;
+    escalated: number;
+    openEscalations: number;
+    avgCompletion: number;
+  };
+  branches: { branch: string; checklist: string; status: string; completionPct: number; flagged: number; pending: number; fixed: number; escalated: number }[];
+  escalations: { branch: string; templateKey: string; severity: string; status: string; level: number; reason: string }[];
+}
+
 export interface Me {
   id: string;
   name: string;
@@ -316,6 +342,10 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
         body: JSON.stringify(body),
       }),
     resolutionLog: () => req<ResolutionLogRow[]>('/submissions/resolution/log'),
+    execSummary: (date?: string) => req<ExecSummaryData>('/exec-summary' + (date ? '?date=' + date : '')),
+    execConfig: () => req<ExecConfig>('/exec-summary/config'),
+    saveExecConfig: (body: ExecConfig) => req<ExecConfig>('/exec-summary/config', { method: 'PUT', body: JSON.stringify(body) }),
+    sendExecSummary: (date?: string) => req<{ sent: { inApp: number; email: number; whatsapp: number } }>('/exec-summary/send' + (date ? '?date=' + date : ''), { method: 'POST' }),
     notifications: (unread = false) =>
       req<AppNotification[]>(`/notifications${unread ? '?unread=true' : ''}`),
     markNotificationRead: (id: string) =>
