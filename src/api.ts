@@ -101,6 +101,19 @@ export interface SubmissionDetail extends SubmissionSummary {
   reviews: { id: string; decision: string; comment: string | null; reviewer?: string; reviewedAt: string }[];
 }
 
+export interface ResolutionLogRow {
+  id: string;
+  submissionId: string;
+  branch: string;
+  checklist: string;
+  businessDate: string;
+  label: string;
+  resolution: string;
+  resolvedByName: string | null;
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+}
+
 export interface Me {
   id: string;
   name: string;
@@ -302,6 +315,7 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
         method: 'POST',
         body: JSON.stringify(body),
       }),
+    resolutionLog: () => req<ResolutionLogRow[]>('/submissions/resolution/log'),
     notifications: (unread = false) =>
       req<AppNotification[]>(`/notifications${unread ? '?unread=true' : ''}`),
     markNotificationRead: (id: string) =>
