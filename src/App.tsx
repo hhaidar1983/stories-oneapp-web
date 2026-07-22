@@ -24,13 +24,13 @@ const SETTINGS_ROLES = ['admin', 'head_office'];
 // Roles allowed to enroll staff faces / set PINs (matches the backend guard).
 const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager'];
 
-const bsBox: React.CSSProperties = { background: 'var(--panel, #12241c)', border: '1px solid var(--line, #21372c)', borderRadius: 10, padding: 14, marginBottom: 14 };
-const bsLbl: React.CSSProperties = { fontSize: 11, opacity: 0.7, display: 'block', marginBottom: 4 };
-const bsInp: React.CSSProperties = { background: 'var(--panel2, #0d1a14)', color: 'inherit', border: '1px solid var(--line, #21372c)', borderRadius: 8, padding: '7px 9px', fontSize: 14, width: '100%', boxSizing: 'border-box' };
+const bsBox: React.CSSProperties = { background: '#ffffff', border: '1px solid #DCE8E1', borderRadius: 10, padding: 14, marginBottom: 14 };
+const bsLbl: React.CSSProperties = { fontSize: 11, color: '#6B7D73', display: 'block', marginBottom: 4 };
+const bsInp: React.CSSProperties = { background: '#ffffff', color: '#14201A', border: '1px solid #DCE8E1', borderRadius: 8, padding: '7px 9px', fontSize: 14, width: '100%', boxSizing: 'border-box' };
 
 function BSwitch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 44, height: 26, borderRadius: 999, border: 'none', cursor: 'pointer', background: on ? 'var(--brand, #0E8B55)' : 'var(--line, #3a4a42)', position: 'relative', transition: 'background .15s', flex: '0 0 auto' }}>
+    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 44, height: 26, borderRadius: 999, border: 'none', cursor: 'pointer', background: on ? '#086C42' : '#C9D6CE', position: 'relative', transition: 'background .15s', flex: '0 0 auto' }}>
       <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
     </button>
   );
@@ -103,8 +103,8 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search branches…" style={{ ...bsInp, marginBottom: 8 }} />
           <div style={{ ...bsBox, padding: 4, maxHeight: 430, overflowY: 'auto' }}>
             {filtered.map((r) => (
-              <button key={r.branch_id} type="button" onClick={() => select(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: r.branch_id === selId ? 'rgba(14,139,85,.16)' : 'transparent', border: 'none', color: 'inherit', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', flex: '0 0 auto', background: r.active ? 'var(--brand, #0E8B55)' : '#8b978f' }} />
+              <button key={r.branch_id} type="button" onClick={() => select(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: r.branch_id === selId ? '#EAF4EE' : 'transparent', border: 'none', color: '#14201A', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flex: '0 0 auto', background: r.active ? '#086C42' : '#8b978f' }} />
                 <span style={{ flex: 1, fontSize: 13 }}>{r.branch_name || r.branch_id}</span>
                 <span style={{ fontSize: 11, opacity: 0.5 }}>{r.branch_id}</span>
               </button>
@@ -139,8 +139,8 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
               <BRow label="Email" on={draft.ch_email} onChange={(v) => patch({ ch_email: v })} />
               <BRow label="WhatsApp" on={draft.ch_whatsapp} onChange={(v) => patch({ ch_whatsapp: v })} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-                <button type="button" onClick={save} disabled={saving} style={{ background: 'var(--brand, #0E8B55)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save changes'}</button>
-                {saved && <span style={{ fontSize: 12, color: 'var(--brand, #0E8B55)', fontWeight: 700 }}>Saved ✓</span>}
+                <button type="button" onClick={save} disabled={saving} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save changes'}</button>
+                {saved && <span style={{ fontSize: 12, color: '#086C42', fontWeight: 700 }}>Saved ✓</span>}
               </div>
             </div>
           )}
