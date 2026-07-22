@@ -279,9 +279,9 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
     // --- Escalations -------------------------------------------------------
     escalations: (status?: string) =>
       req<EscalationRow[]>(`/escalations${status ? `?status=${status}` : ''}`),
-    escalationConfig: () => req<EscalationConfig>('/escalations/config'),
-    saveEscalationConfig: (body: EscalationConfig) =>
-      req<EscalationConfig>('/escalations/config', { method: 'PUT', body: JSON.stringify(body) }),
+    escalationConfig: (branch?: string) => req<EscalationConfig>('/escalations/config' + (branch ? '?branch=' + branch : '')),
+    saveEscalationConfig: (body: EscalationConfig, branch?: string) =>
+      req<EscalationConfig>('/escalations/config' + (branch ? '?branch=' + branch : ''), { method: 'PUT', body: JSON.stringify(body) }),
     testEscalation: (body: { branchId?: string; level?: number }) =>
       req<{ ok: boolean; branch: string; level: number; levelTitle: string; recipients: { name: string; email: string | null; whatsapp: string | null }[]; channels: { inApp: boolean; email: boolean; whatsapp: boolean } }>('/escalations/test', {
         method: 'POST',
