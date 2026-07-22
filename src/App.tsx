@@ -15,6 +15,7 @@ import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 import { Escalations } from './Escalations';
 import { EscalationSettings } from './EscalationSettings';
+import { ExecSummary } from './ExecSummary';
 import { ChecklistEditor } from './ChecklistEditor';
 import { Login } from './Login';
 import { FaceEnroll } from './FaceEnroll';
@@ -272,7 +273,7 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
 }
 
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
-  const [tab, setTab] = useState<'submissions' | 'escalations'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'escalations' | 'exec'>('submissions');
   const canSettings = !!me && SETTINGS_ROLES.includes(me.role);
   const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
     <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
@@ -284,9 +285,11 @@ function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: M
       <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <Tab id="submissions" label="Live submissions" />
         <Tab id="escalations" label="Escalations" />
+        <Tab id="exec" label="Executive" />
       </div>
       {tab === 'submissions' && <HeadOffice api={api} />}
       {tab === 'escalations' && <Escalations api={api} />}
+      {tab === 'exec' && <ExecSummary api={api} me={me} />}
     </>
   );
 }
