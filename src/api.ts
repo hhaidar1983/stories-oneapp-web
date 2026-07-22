@@ -246,6 +246,25 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
     updatePerson: (id: string, body: Partial<PersonRow>) =>
       req<PersonRow>('/people/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
     me: () => req<Me>('/me'),
+    adminChecklists: (branch: string) =>
+      req<ChecklistAdminSection[]>('/admin/checklists?branch=' + encodeURIComponent(branch)),
+    saveChecklistSection: (body: {
+      branchId: string;
+      key: string;
+      items: ChecklistAdminItem[];
+    }) =>
+      req<ChecklistAdminSection[]>('/admin/checklists/section', {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      }),
+    resetChecklistSection: (branch: string, key: string) =>
+      req<ChecklistAdminSection[]>(
+        '/admin/checklists/section?branch=' +
+          encodeURIComponent(branch) +
+          '&key=' +
+          encodeURIComponent(key),
+        { method: 'DELETE' },
+      ),
     checklists: (branchId: string) => req<Checklist[]>(`/branches/${branchId}/checklists`),
     uploadToken: (body: { branchId: string; businessDate: string; itemKey: string; kind: string; ext: string }) =>
       req<UploadToken>('/media/upload-token', { method: 'POST', body: JSON.stringify(body) }),
@@ -327,6 +346,27 @@ export interface StaffImportResult {
   updated: number;
   branchesCreated: number;
   skipped: number;
+}
+
+export interface ChecklistAdminItem {
+  id: string | null;
+  sort: number;
+  label: string;
+  type: string;
+  required: boolean;
+  unit: string | null;
+  min: number | null;
+  max: number | null;
+  noRange: boolean;
+  hint: string | null;
+}
+
+export interface ChecklistAdminSection {
+  key: string;
+  name: string;
+  icon: string | null;
+  isOverride: boolean;
+  items: ChecklistAdminItem[];
 }
 
 export type Api = ReturnType<typeof createApi>;
