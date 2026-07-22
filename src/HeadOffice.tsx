@@ -113,6 +113,48 @@ export function HeadOffice({ api }: { api: Api }) {
   );
 }
 
+function ItemResolve({ api, submissionId, item }: { api: Api; submissionId: string; item: SubmissionDetail['items'][number] }) {
+  const [res, setRes] = useState<{ r: string | null; note: string | null; by: string | null }>({ r: item.resolution, note: item.resolutionNote, by: item.resolvedByName });
+  const [mode, setMode] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function act(action: string) {
+    if (action === 'escalated' && !note.trim()) { setErr('Add your remarks first'); return; }
+    setBusy(true); setErr(null);
+    try {
+      await api.resolveItem(submissionId, item.id, { action: action as 'fixed' | 'escalated', note: note.trim() || undefined });
+      setRes({ r: action, note: note.trim() || null, by: 'You' });
+      setMode('');
+    } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
+  }
+  if (res.r === 'fixed') {
+    return <div className="rvresolved" style={{ marginTop: 6, color: '#2fbd74', fontWeight: 600 }}>Successfully fixed{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+  }
+  if (res.r === 'escalated') {
+    return <div className="rvresolved" style={{ marginTop: 6, color: '#e8a33d', fontWeight: 600 }}>Escalated to Ops{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+  }
+  return (
+    <div className="rvresolve" style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      {err ? <div className="err" style={{ margin: '4px 0' }}>{err}</div> : null}
+      {mode !== 'escalate' ? (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button style={{ background: '#1f7a4d', color: '#fff' }} disabled={busy} onClick={() => act('fixed')}>Mark fixed</button>
+          <button style={{ background: '#b5601a', color: '#fff' }} disabled={busy} onClick={() => setMode('escalate')}>Escalate to Ops</button>
+        </div>
+      ) : (
+        <div>
+          <textarea placeholder="Your remarks for the Operations Manager" value={note} onChange={(e) => setNote(e.target.value)} rows={2} style={{ width: '100%', boxSizing: 'border-box' }} />
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button disabled={busy} onClick={() => setMode('')}>Cancel</button>
+            <button style={{ background: '#b5601a', color: '#fff' }} disabled={busy} onClick={() => act('escalated')}>Send to Ops</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReviewModal({ api, detail, onClose, onDone }: {
   api: Api;
   detail: SubmissionDetail;
@@ -197,6 +239,7 @@ function ReviewModal({ api, detail, onClose, onDone }: {
                   <button className={!flags[i.id] ? 'sel-ok' : ''} onClick={() => setFlags((f) => ({ ...f, [i.id]: false }))}>OK</button>
                   <button className={flags[i.id] ? 'sel-flag' : ''} onClick={() => setFlags((f) => ({ ...f, [i.id]: true }))}>Flag</button>
                 </div>
+                {bad && <ItemResolve api={api} submissionId={detail.id} item={i} />}
               </div>
             );
           })}
