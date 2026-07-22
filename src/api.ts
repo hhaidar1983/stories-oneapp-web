@@ -207,6 +207,17 @@ export interface BranchConfigRow {
   updated_at?: string;
 }
 
+export interface PersonRow {
+  id: string;
+  name: string;
+  email: string | null;
+  whatsapp: string | null;
+  role: string;
+  branch_id: string | null;
+  branch_name?: string | null;
+  active: boolean;
+}
+
 export function createApi(base: string, authHeaders: () => Promise<Record<string, string>>) {
   async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const headers = {
@@ -229,6 +240,11 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
     branchConfigs: () => req<BranchConfigRow[]>('/branch-config'),
     updateBranchConfig: (id: string, patch: Partial<BranchConfigRow>) =>
       req<BranchConfigRow>('/branch-config/' + id, { method: 'PATCH', body: JSON.stringify(patch) }),
+    people: () => req<PersonRow[]>('/people'),
+    createPerson: (body: Partial<PersonRow>) =>
+      req<PersonRow>('/people', { method: 'POST', body: JSON.stringify(body) }),
+    updatePerson: (id: string, body: Partial<PersonRow>) =>
+      req<PersonRow>('/people/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
     me: () => req<Me>('/me'),
     checklists: (branchId: string) => req<Checklist[]>(`/branches/${branchId}/checklists`),
     uploadToken: (body: { branchId: string; businessDate: string; itemKey: string; kind: string; ext: string }) =>
