@@ -592,7 +592,7 @@ function CameraCapture({
             <span className={`camgeo ${geoState === 'ok' ? 'ok' : geoState === 'off' ? 'bad' : ''}`}>{geoLabel}</span>
           </div>
           {recording && (
-            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', background: 'rgba(190,45,45,0.95)', color: '#fff', padding: '5px 14px', borderRadius: 999, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, zIndex: 6 }}>
+            <div style={{ position: 'absolute', bottom: 206, left: '50%', transform: 'translateX(-50%)', background: 'rgba(190,45,45,0.95)', color: '#fff', padding: '5px 14px', borderRadius: 999, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, zIndex: 6 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
               REC {Math.floor(recSecs / 60)}:{String(recSecs % 60).padStart(2, '0')}
             </div>
