@@ -379,6 +379,7 @@ function ItemRow(props: {
 }
 
 type Geo = { lat: number; lng: number; acc: number };
+let geoCache: { geo: Geo | null; state: 'ok' | 'off' } | null = null;
 type CaptureMeta = { lat?: number; lng?: number; accuracyM?: number; capturedAt: string };
 
 function pickVideoMime(): string {
@@ -452,11 +453,14 @@ function CameraCapture({
         setErr('Camera unavailable — please allow camera access on this phone, then reopen. (' + (e?.message || e) + ')');
       }
     })();
-    if ('geolocation' in navigator) {
+    if (geoCache) {
+      setGeo(geoCache.geo);
+      setGeoState(geoCache.state);
+    } else if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (p) => { setGeo({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }); setGeoState('ok'); },
-        () => setGeoState('off'),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+        (p) => { setGeo({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }); setGeoState('ok'); geoCache = { geo: { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }, state: 'ok' }; },
+        () => { geoCache = { geo: null, state: 'off' }; setGeoState('off'); },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
       );
     } else {
       setGeoState('off');
