@@ -44,6 +44,8 @@ const today = () => new Date().toLocaleDateString('en-CA');
 
 function isFilled(item: ChecklistItem, v: Value | undefined): boolean {
   if (!v) return false;
+  if (item.needsPhoto && !(v.media && v.media.some((m) => m.kind === 'photo'))) return false;
+  if (item.needsVideo && !(v.media && v.media.some((m) => m.kind === 'video'))) return false;
   switch (item.type) {
     case 'check': return v.valueCheck === 'pass' || v.valueCheck === 'fail';
     case 'number': return v.valueNumber != null && !Number.isNaN(v.valueNumber);
@@ -140,7 +142,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
         ...v,
         [item.id]: {
           ...v[item.id],
-          media: [{
+          media: [
+                  ...(v[item.id]?.media || []).filter((mm) => mm.kind !== kind),
+                  {
             kind, storageKey: token.storageKey, mime: file.type, sizeBytes: file.size,
             gpsLat: meta?.lat, gpsLng: meta?.lng, gpsAccuracyM: meta?.accuracyM, capturedAt: meta?.capturedAt,
           }],
@@ -354,6 +358,22 @@ function ItemRow(props: {
           {value?.media?.length ? <span className="captured-tag">✓ captured · stamped</span> : null}
         </div></div>
       )}
+        {item.needsPhoto && item.type !== 'photo' && (
+          <div className="control"><div className="capture">
+            <button className="capbtn" onClick={() => props.onCamera(item, 'photo')}>
+              📷 {props.busy ? 'Uploading…' : (value?.media?.some((m) => m.kind === 'photo') ? 'Retake photo' : 'Add photo')}
+            </button>
+            {value?.media?.some((m) => m.kind === 'photo') ? <span className="captured-tag">✓ photo · stamped</span> : null}
+          </div></div>
+        )}
+        {item.needsVideo && item.type !== 'video' && (
+          <div className="control"><div className="capture">
+            <button className="capbtn video" onClick={() => props.onCamera(item, 'video')}>
+              🎥 {props.busy ? 'Uploading…' : (value?.media?.some((m) => m.kind === 'video') ? 'Retake video' : 'Add video')}
+            </button>
+            {value?.media?.some((m) => m.kind === 'video') ? <span className="captured-tag">✓ video · stamped</span> : null}
+          </div></div>
+        )}
     </div>
   );
 }
