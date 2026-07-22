@@ -57,7 +57,7 @@ export function HeadOffice({ api }: { api: Api }) {
             {notifs.map((n) => (
               <div className="alert" key={n.id}>
                 <span style={{ fontSize: 18 }}>⚑</span>
-                <div className="at">
+                <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default' }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
                   <div className="title">{n.title}</div>
                   <div className="body">{n.body}</div>
                 </div>
