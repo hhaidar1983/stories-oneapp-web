@@ -15,17 +15,17 @@ const TRIGGERS: { key: TriggerKey; name: string }[] = [
 const SEVERITIES = ['critical', 'high', 'medium'] as const;
 
 const box: React.CSSProperties = {
-  background: 'var(--panel, #12241c)',
-  border: '1px solid var(--line, #21372c)',
+  background: '#ffffff',
+  border: '1px solid #DCE8E1',
   borderRadius: 10,
   padding: 14,
   marginBottom: 14,
 };
 const lbl: React.CSSProperties = { fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 };
 const inp: React.CSSProperties = {
-  background: '#0d1a14',
-  border: '1px solid #243a2e',
-  color: 'inherit',
+  background: '#ffffff',
+  border: '1px solid #DCE8E1',
+  color: '#14201A',
   borderRadius: 6,
   padding: '6px 8px',
   fontSize: 13,
@@ -302,7 +302,7 @@ export function EscalationSettings({ api }: { api: Api }) {
           </button>
         </div>
         {testMsg && (
-          <div style={{ fontSize: 12.5, marginTop: 8, color: 'var(--green, #2ec16b)' }}>{testMsg}</div>
+          <div style={{ fontSize: 12.5, marginTop: 8, color: '#086C42' }}>{testMsg}</div>
         )}
       </div>
 
@@ -310,7 +310,7 @@ export function EscalationSettings({ api }: { api: Api }) {
         <button className="primary" disabled={saving} onClick={save}>
           {saving ? 'Saving…' : 'Save settings'}
         </button>
-        {saved && <span style={{ color: 'var(--green, #2ec16b)' }}>Saved ✓</span>}
+        {saved && <span style={{ color: '#086C42' }}>Saved ✓</span>}
       </div>
     </>
   );
