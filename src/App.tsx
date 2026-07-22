@@ -10,7 +10,7 @@ import {
   pca,
   useAuth,
 } from './auth';
-import { createApi, Me, BranchConfigRow } from './api';
+import { createApi, Me, BranchConfigRow, PersonRow } from './api';
 import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 import { Escalations } from './Escalations';
@@ -152,8 +152,126 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
 
 const DEMO_ADMIN = { id: 'ed73a968-ff2a-43cf-a966-11b49914fe91', name: 'Charbel N. — Head Office (Admin)' };
 
+const PERSON_ROLES: { v: string; l: string }[] = [
+  { v: 'admin', l: 'Admin' },
+  { v: 'head_office', l: 'Head Office' },
+  { v: 'hq_reviewer', l: 'HQ Reviewer' },
+  { v: 'ops_manager', l: 'Operations Manager' },
+  { v: 'area_manager', l: 'Area Manager' },
+  { v: 'branch_manager', l: 'Branch Manager' },
+  { v: 'shift_lead', l: 'Shift Lead' },
+  { v: 'staff', l: 'Staff' },
+];
+const roleLabel = (v: string) => (PERSON_ROLES.find((r) => r.v === v) || { l: v }).l;
+
+function People({ api }: { api: ReturnType<typeof createApi> }) {
+  const [rows, setRows] = useState<PersonRow[] | null>(null);
+  const [branches, setBranches] = useState<BranchConfigRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [draft, setDraft] = useState<PersonRow | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [q, setQ] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    api.people().then(setRows).catch((e: any) => setError(e.message));
+    api.branchConfigs().then(setBranches).catch(() => {});
+  }, [api]);
+
+  if (error) return <div className="err">{error}</div>;
+  if (!rows) return <div className="center">Loading people…</div>;
+
+  const edit = (r: PersonRow) => { setDraft({ ...r }); setIsNew(false); setSaved(false); };
+  const addNew = () => { setDraft({ id: '', name: '', email: null, whatsapp: null, role: 'staff', branch_id: null, active: true }); setIsNew(true); setSaved(false); };
+  const patch = (p: Partial<PersonRow>) => { setDraft({ ...(draft as PersonRow), ...p }); setSaved(false); };
+
+  const save = async () => {
+    if (!draft) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const body = { name: draft.name, email: draft.email, whatsapp: draft.whatsapp, role: draft.role, branch_id: draft.branch_id, active: draft.active };
+      if (isNew) await api.createPerson(body);
+      else await api.updatePerson(draft.id, body);
+      const fresh = await api.people();
+      setRows(fresh);
+      setSaved(true);
+      setDraft(null);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filtered = rows.filter((r) => (r.name + ' ' + r.role + ' ' + (r.email || '')).toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <>
+      <div className="sectionlabel">People &amp; permissions</div>
+      <p style={{ fontSize: 12, color: '#6B7D73', marginTop: -2, marginBottom: 12 }}>Add the people who use Stories OneApp — their role (what they can access), email, WhatsApp, and branch. Managed by admin.</p>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 280px', minWidth: 250 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people…" style={{ ...bsInp, flex: 1 }} />
+            <button type="button" onClick={addNew} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+          </div>
+          <div style={{ ...bsBox, padding: 4, maxHeight: 430, overflowY: 'auto' }}>
+            {filtered.map((r) => (
+              <button key={r.id} type="button" onClick={() => edit(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: draft && draft.id === r.id ? '#EAF4EE' : 'transparent', border: 'none', color: '#14201A', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: r.active ? '#086C42' : '#C9D6CE' }} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>{r.name}</span>
+                  <span style={{ display: 'block', fontSize: 11, color: '#6B7D73' }}>{roleLabel(r.role)}{r.branch_name ? ' · ' + r.branch_name : ''}</span>
+                </span>
+              </button>
+            ))}
+            {filtered.length === 0 && <div style={{ padding: 12, fontSize: 12, color: '#6B7D73' }}>No people match.</div>}
+          </div>
+        </div>
+        <div style={{ flex: '1 1 320px', minWidth: 280 }}>
+          {!draft && <div style={{ ...bsBox, color: '#6B7D73', fontSize: 13 }}>Select a person to edit, or add a new one.</div>}
+          {draft && (
+            <div style={bsBox}>
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>{isNew ? 'New person' : draft.name}</div>
+              <div style={{ marginBottom: 10 }}><span style={bsLbl}>Name</span><input value={draft.name} onChange={(e) => patch({ name: e.target.value })} style={bsInp} /></div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Email</span><input value={draft.email || ''} onChange={(e) => patch({ email: e.target.value })} style={bsInp} /></div>
+                <div style={{ flex: 1 }}><span style={bsLbl}>WhatsApp</span><input value={draft.whatsapp || ''} onChange={(e) => patch({ whatsapp: e.target.value })} placeholder="+961..." style={bsInp} /></div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Role</span>
+                  <select value={draft.role} onChange={(e) => patch({ role: e.target.value })} style={bsInp}>
+                    {PERSON_ROLES.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}><span style={bsLbl}>Branch</span>
+                  <select value={draft.branch_id || ''} onChange={(e) => patch({ branch_id: e.target.value || null })} style={bsInp}>
+                    <option value="">— none —</option>
+                    {branches.map((b) => <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 13, flex: 1 }}>Active (can access the app)</span>
+                <BSwitch on={draft.active} onChange={(v) => patch({ active: v })} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button type="button" onClick={save} disabled={saving} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : isNew ? 'Create person' : 'Save changes'}</button>
+                {saved && <span style={{ fontSize: 12, color: '#086C42', fontWeight: 700 }}>Saved ✓</span>}
+                <button type="button" onClick={() => setDraft(null)} style={{ background: 'transparent', color: '#6B7D73', border: 'none', fontSize: 13, cursor: 'pointer', marginLeft: 'auto' }}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
-  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings' | 'branches'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings' | 'branches' | 'people'>('submissions');
   const canSettings = !!me && SETTINGS_ROLES.includes(me.role);
   const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
     <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
@@ -167,11 +285,13 @@ function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: M
         <Tab id="escalations" label="Escalations" />
         {canSettings && <Tab id="settings" label="⚙ Settings" />}
             {canSettings && <Tab id="branches" label="Branch settings" />}
+            {canSettings && <Tab id="people" label="People" />}
       </div>
       {tab === 'submissions' && <HeadOffice api={api} />}
       {tab === 'escalations' && <Escalations api={api} />}
       {tab === 'settings' && canSettings && <EscalationSettings api={api} />}
           {tab === 'branches' && canSettings && <BranchSettings api={api} />}
+          {tab === 'people' && canSettings && <People api={api} />}
     </>
   );
 }
