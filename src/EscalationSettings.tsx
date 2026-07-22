@@ -121,7 +121,7 @@ export function EscalationSettings({ api }: { api: Api }) {
         <select style={inp} value={branch} onChange={(e) => setBranch(e.target.value)}>
           <option value="">Company default (all branches)</option>
           {branches.map((b) => (
-            <option key={b.branchId} value={b.branchId}>{b.branchName || b.branchId}</option>
+            <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>
           ))}
         </select>
         <div style={{ fontSize: 11, opacity: 0.65, marginTop: 6 }}>
