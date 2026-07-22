@@ -8,6 +8,8 @@ export interface ChecklistItem {
   min: number | null;
   max: number | null;
   noRange: boolean;
+  needsPhoto: boolean;
+  needsVideo: boolean;
   hint: string | null;
 }
 export interface Checklist {
@@ -358,6 +360,8 @@ export interface ChecklistAdminItem {
   min: number | null;
   max: number | null;
   noRange: boolean;
+  needsPhoto: boolean;
+  needsVideo: boolean;
   hint: string | null;
 }
 
