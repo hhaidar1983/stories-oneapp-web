@@ -191,6 +191,22 @@ export interface PinStaff {
   branch: string | null;
 }
 
+export interface BranchConfigRow {
+  branch_id: string;
+  branch_name?: string;
+  active: boolean;
+  deadline_opening: string;
+  deadline_handover: string;
+  deadline_closing: string;
+  trig_not_submitted: boolean;
+  trig_low_completion: boolean;
+  trig_flagged: boolean;
+  trig_rushed: boolean;
+  ch_email: boolean;
+  ch_whatsapp: boolean;
+  updated_at?: string;
+}
+
 export function createApi(base: string, authHeaders: () => Promise<Record<string, string>>) {
   async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const headers = {
@@ -210,6 +226,9 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
   }
 
   return {
+    branchConfigs: () => req<BranchConfigRow[]>('/branch-config'),
+    updateBranchConfig: (id: string, patch: Partial<BranchConfigRow>) =>
+      req<BranchConfigRow>('/branch-config/' + id, { method: 'PATCH', body: JSON.stringify(patch) }),
     me: () => req<Me>('/me'),
     checklists: (branchId: string) => req<Checklist[]>(`/branches/${branchId}/checklists`),
     uploadToken: (body: { branchId: string; businessDate: string; itemKey: string; kind: string; ext: string }) =>
