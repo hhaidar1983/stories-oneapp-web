@@ -271,7 +271,7 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
 }
 
 function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: Me | null }) {
-  const [tab, setTab] = useState<'submissions' | 'escalations' | 'settings' | 'branches' | 'people'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'escalations'>('submissions');
   const canSettings = !!me && SETTINGS_ROLES.includes(me.role);
   const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
     <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
@@ -283,15 +283,9 @@ function HeadOfficeShell({ api, me }: { api: ReturnType<typeof createApi>; me: M
       <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <Tab id="submissions" label="Live submissions" />
         <Tab id="escalations" label="Escalations" />
-        {canSettings && <Tab id="settings" label="⚙ Settings" />}
-            {canSettings && <Tab id="branches" label="Branch settings" />}
-            {canSettings && <Tab id="people" label="People" />}
       </div>
       {tab === 'submissions' && <HeadOffice api={api} />}
       {tab === 'escalations' && <Escalations api={api} />}
-      {tab === 'settings' && canSettings && <EscalationSettings api={api} />}
-          {tab === 'branches' && canSettings && <BranchSettings api={api} />}
-          {tab === 'people' && canSettings && <People api={api} />}
     </>
   );
 }
@@ -397,6 +391,9 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
 
 function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
   const tiles: AppTile[] = [...APP_TILES];
+  if (me && SETTINGS_ROLES.includes(me.role)) {
+    tiles.push({ key: 'admin', icon: '🛠️', name: 'Admin & Settings', sub: 'Escalation settings, branch triggers & people', live: true });
+  }
   if (me && MANAGER_ROLES.includes(me.role)) {
     tiles.push({ key: 'faceenroll', icon: '🧑‍💼', name: 'Staff Face Setup', sub: 'Enroll faces & set login PINs', live: true });
   }
@@ -425,6 +422,27 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
         ),
       ),
     ),
+  );
+}
+
+function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
+  const [tab, setTab] = useState<'settings' | 'branches' | 'people'>('settings');
+  const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
+    <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
+      {label}
+    </button>
+  );
+  return (
+    <>
+      <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+        <Tab id="settings" label="⚙ Settings" />
+        <Tab id="branches" label="Branch settings" />
+        <Tab id="people" label="People" />
+      </div>
+      {tab === 'settings' && <EscalationSettings api={api} />}
+      {tab === 'branches' && <BranchSettings api={api} />}
+      {tab === 'people' && <People api={api} />}
+    </>
   );
 }
 
@@ -479,6 +497,15 @@ function Shell() {
           />
         ) : !openApp ? (
           Hub({ onOpen: setOpenApp, me })
+        ) : openApp === 'admin' ? (
+          <>
+            {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
+            {!me || !SETTINGS_ROLES.includes(me.role) ? (
+              <div className="err">Admin access required.</div>
+            ) : (
+              <AdminShell api={api} />
+            )}
+          </>
         ) : openApp === 'faceenroll' ? (
           <>
             {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
