@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Api, AppNotification, SubmissionDetail, SubmissionSummary } from './api';
+import { Api, AppNotification, ResolutionLogRow, SubmissionDetail, SubmissionSummary } from './api';
 
 // Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -101,6 +101,7 @@ export function HeadOffice({ api }: { api: Api }) {
         </tbody>
       </table>
 
+      <OpsLog api={api} onOpen={(id) => api.submission(id).then(setDetail).catch((e) => setError(e.message))} />
       {detail && (
         <ReviewModal
           api={api}
@@ -151,6 +152,74 @@ function ItemResolve({ api, submissionId, item }: { api: Api; submissionId: stri
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
+  const [reports, setReports] = useState<SubmissionSummary[]>([]);
+  const [log, setLog] = useState<ResolutionLogRow[]>([]);
+  const [filter, setFilter] = useState('all');
+  const [repDate, setRepDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [err, setErr] = useState<string | null>(null);
+  function loadLog() {
+    api.resolutionLog().then((r) => setLog(Array.isArray(r) ? r : [])).catch((e) => setErr(e.message));
+  }
+  function loadReports(d: string) {
+    api.submissions('date=' + d).then((r) => setReports(Array.isArray(r) ? r : [])).catch((e) => setErr(e.message));
+  }
+  useEffect(() => { loadLog(); loadReports(repDate); }, []);
+  const shown = log.filter((l) => (filter === 'all' ? true : (l.resolution || 'pending') === filter));
+  return (
+    <div style={{ marginTop: 26 }}>
+      <div className="sectionlabel">Operations — reports on demand</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
+        <input type="date" value={repDate} onChange={(e) => { setRepDate(e.target.value); loadReports(e.target.value); }} />
+        <button onClick={() => loadReports(repDate)}>Load day</button>
+      </div>
+      {err ? <div className="err">{err}</div> : null}
+      <table>
+        <thead><tr><th>Branch</th><th>Checklist</th><th>Completion</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody>
+          {reports.length === 0 ? <tr><td colSpan={5} style={{ color: 'var(--muted)' }}>No reports for this day.</td></tr> : null}
+          {reports.map((r) => (
+            <tr key={r.id} className="rowbtn" onClick={() => onOpen(r.id)}>
+              <td><b>{r.branch.name}</b></td>
+              <td>{r.name}</td>
+              <td>{r.completionPct}%</td>
+              <td>{r.status.toUpperCase()}</td>
+              <td>{r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="sectionlabel" style={{ marginTop: 22 }}>Task log — pending and resolved</div>
+      <div style={{ display: 'flex', gap: 6, margin: '8px 0', flexWrap: 'wrap' }}>
+        {['all', 'pending', 'fixed', 'escalated'].map((f) => (
+          <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? '#2a6f97' : undefined, color: filter === f ? '#fff' : undefined }}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
+        ))}
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Branch</th><th>Task</th><th>State</th><th>By</th><th>Remarks</th></tr></thead>
+        <tbody>
+          {shown.length === 0 ? <tr><td colSpan={6} style={{ color: 'var(--muted)' }}>No flagged tasks yet.</td></tr> : null}
+          {shown.map((l) => {
+            const state = l.resolution || 'pending';
+            const color = state === 'fixed' ? '#2fbd74' : state === 'escalated' ? '#e8a33d' : '#cc9966';
+            const nice = state === 'fixed' ? 'Fixed' : state === 'escalated' ? 'Escalated' : 'Pending';
+            return (
+              <tr key={l.id} className="rowbtn" onClick={() => onOpen(l.submissionId)}>
+                <td>{new Date(l.businessDate).toLocaleDateString('en-CA')}</td>
+                <td><b>{l.branch}</b></td>
+                <td>{l.label}</td>
+                <td style={{ color, fontWeight: 600 }}>{nice}</td>
+                <td>{l.resolvedByName || '-'}</td>
+                <td style={{ maxWidth: 240, whiteSpace: 'normal' }}>{l.resolutionNote || '-'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
