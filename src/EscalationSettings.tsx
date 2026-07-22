@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Api, EscalationConfig, Level, Person, SectionKey, TriggerKey } from './api';
+import { Api, EscalationConfig, Level, Person, SectionKey, TriggerKey, BranchConfigRow } from './api';
 
 const SECTIONS: { key: SectionKey; name: string }[] = [
   { key: 'opening', name: 'Opening' },
@@ -38,14 +38,20 @@ export function EscalationSettings({ api }: { api: Api }) {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState<string | null>(null);
-  const [testLevel, setTestLevel] = useState(1);
+  const [testLevel, setTestLevel] = useState(1)
+  const [branch, setBranch] = useState('')
+  const [branches, setBranches] = useState<BranchConfigRow[]>([]);
 
   useEffect(() => {
     api
-      .escalationConfig()
+      .escalationConfig(branch || undefined)
       .then(setCfg)
       .catch((e) => setError(e.message));
-  }, [api]);
+  }, [api, branch]);
+
+  useEffect(() => {
+    api.branchConfigs().then((rows) => setBranches(rows)).catch(() => {})
+  }, [api])
 
   if (error) return <div className="err">{error}</div>;
   if (!cfg) return <div className="center">Loading settings…</div>;
@@ -81,7 +87,7 @@ export function EscalationSettings({ api }: { api: Api }) {
     setSaving(true);
     setError(null);
     try {
-      const out = await api.saveEscalationConfig(cfg);
+      const out = await api.saveEscalationConfig(cfg, branch || undefined);
       setCfg(out);
       setSaved(true);
     } catch (e: any) {
@@ -110,6 +116,18 @@ export function EscalationSettings({ api }: { api: Api }) {
   return (
     <>
       <div className="sectionlabel">Escalation settings</div>
+      <div style={{ marginBottom: 14 }}>
+        <label style={lbl}>Branch scope</label>
+        <select style={inp} value={branch} onChange={(e) => setBranch(e.target.value)}>
+          <option value="">Company default (all branches)</option>
+          {branches.map((b) => (
+            <option key={b.branchId} value={b.branchId}>{b.branchName || b.branchId}</option>
+          ))}
+        </select>
+        <div style={{ fontSize: 11, opacity: 0.65, marginTop: 6 }}>
+          {branch ? 'Editing the escalation chain for this branch only.' : 'Editing the company-wide default chain. Pick a branch to set an override.'}
+        </div>
+      </div>
 
       {/* CHAIN + PEOPLE */}
       <h3 style={{ margin: '6px 0' }}>1 · The management chain &amp; who to notify</h3>
