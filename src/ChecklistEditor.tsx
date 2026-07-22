@@ -71,6 +71,8 @@ function blankItem(): ChecklistAdminItem {
     min: null,
     max: null,
     noRange: false,
+    needsPhoto: false,
+    needsVideo: false,
     hint: null,
   };
 }
@@ -330,6 +332,42 @@ export function ChecklistEditor({ api }: { api: Api }) {
                           }
                         />
                         Required
+                      </label>
+                      <label
+                        style={{
+                          fontSize: 12,
+                          color: '#14201A',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={it.needsPhoto}
+                          onChange={(e) =>
+                            setItem(sec.key, idx, { needsPhoto: e.target.checked })
+                          }
+                        />
+                        Require photo
+                      </label>
+                      <label
+                        style={{
+                          fontSize: 12,
+                          color: '#14201A',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={it.needsVideo}
+                          onChange={(e) =>
+                            setItem(sec.key, idx, { needsVideo: e.target.checked })
+                          }
+                        />
+                        Require video
                       </label>
                       {it.type === 'number' && (
                         <>
