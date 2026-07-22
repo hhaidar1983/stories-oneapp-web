@@ -15,6 +15,7 @@ import { BranchApp } from './BranchApp';
 import { HeadOffice } from './HeadOffice';
 import { Escalations } from './Escalations';
 import { EscalationSettings } from './EscalationSettings';
+import { ChecklistEditor } from './ChecklistEditor';
 import { Login } from './Login';
 import { FaceEnroll } from './FaceEnroll';
 
@@ -426,7 +427,7 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
 }
 
 function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
-  const [tab, setTab] = useState<'settings' | 'branches' | 'people'>('settings');
+  const [tab, setTab] = useState<'settings' | 'branches' | 'people' | 'checklists'>('settings');
   const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
     <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
       {label}
@@ -438,10 +439,12 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
         <Tab id="settings" label="⚙ Settings" />
         <Tab id="branches" label="Branch settings" />
         <Tab id="people" label="People" />
+        <Tab id="checklists" label="Checklists" />
       </div>
       {tab === 'settings' && <EscalationSettings api={api} />}
       {tab === 'branches' && <BranchSettings api={api} />}
       {tab === 'people' && <People api={api} />}
+      {tab === 'checklists' && <ChecklistEditor api={api} />}
     </>
   );
 }
