@@ -430,24 +430,46 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
 }
 
 function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
-  const [tab, setTab] = useState<'settings' | 'branches' | 'people' | 'checklists'>('settings');
-  const Tab = ({ id, label }: { id: typeof tab; label: string }) => (
-    <button className={'hqtab ' + (tab === id ? 'on' : '')} onClick={() => setTab(id)}>
-      {label}
+  const [sec, setSec] = useState<'' | 'settings' | 'branches' | 'people' | 'checklists'>('');
+  if (sec) {
+    return (
+      <>
+        <button className="backbtn menuback" onClick={() => setSec('')}>← Back to settings</button>
+        {sec === 'settings' && <EscalationSettings api={api} />}
+        {sec === 'branches' && <BranchSettings api={api} />}
+        {sec === 'people' && <People api={api} />}
+        {sec === 'checklists' && <ChecklistEditor api={api} />}
+      </>
+    );
+  }
+  const cardStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'flex-start', textAlign: 'left', width: '100%', background: '#ffffff', border: '1px solid #DCE8E1', borderRadius: 14, padding: 16, cursor: 'pointer', color: '#14201A' };
+  const icStyle = (bg: string): React.CSSProperties => ({ width: 44, height: 44, borderRadius: 11, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, background: bg });
+  const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 6 };
+  const glabel: React.CSSProperties = { fontSize: 11.5, fontWeight: 800, letterSpacing: 1.2, color: '#6B7D73', textTransform: 'uppercase', margin: '20px 2px 10px' };
+  const Card = ({ id, icon, tone, title, desc }: { id: typeof sec; icon: string; tone: string; title: string; desc: string }) => (
+    <button type="button" style={cardStyle} onClick={() => setSec(id)}>
+      <span style={icStyle(tone)}>{icon}</span>
+      <span style={{ flex: 1 }}>
+        <span style={{ display: 'block', fontSize: 15.5, fontWeight: 700, marginBottom: 3 }}>{title}</span>
+        <span style={{ display: 'block', fontSize: 12.8, color: '#6B7D73', lineHeight: 1.45 }}>{desc}</span>
+      </span>
+      <span style={{ color: '#c3d2c9', fontSize: 20, alignSelf: 'center' }}>›</span>
     </button>
   );
   return (
     <>
-      <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <Tab id="settings" label="Escalation chain" />
-        <Tab id="branches" label="Branch alerts" />
-        <Tab id="people" label="People" />
-        <Tab id="checklists" label="Checklists" />
+      <div style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px' }}>Admin &amp; Settings</div>
+      <p style={{ color: '#6B7D73', fontSize: 13.5, marginTop: 0, marginBottom: 4 }}>Manage how Stories OneApp escalates problems and who can use it.</p>
+      <div style={glabel}>Alerts &amp; escalations</div>
+      <div style={grid}>
+        <Card id="settings" icon="🚨" tone="#e7f2eb" title="Escalation chain" desc="Who gets alerted at each level, and how fast a problem climbs the chain." />
+        <Card id="branches" icon="🔔" tone="#fdeede" title="Branch alerts" desc="Per-branch deadlines, which problems trigger, and delivery channels." />
       </div>
-      {tab === 'settings' && <EscalationSettings api={api} />}
-      {tab === 'branches' && <BranchSettings api={api} />}
-      {tab === 'people' && <People api={api} />}
-      {tab === 'checklists' && <ChecklistEditor api={api} />}
+      <div style={glabel}>Organization</div>
+      <div style={grid}>
+        <Card id="people" icon="👥" tone="#e6eefb" title="People & permissions" desc="Add people, set their role and branch, and control access." />
+        <Card id="checklists" icon="📋" tone="#f0ecfa" title="Checklists" desc="Edit Opening, Handover and Closing items, per branch." />
+      </div>
     </>
   );
 }
