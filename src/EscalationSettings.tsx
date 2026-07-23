@@ -13,6 +13,7 @@ const TRIGGERS: { key: TriggerKey; name: string }[] = [
   { key: 'rushed', name: 'Rushed / too fast' },
 ];
 const SEVERITIES = ['critical', 'high', 'medium'] as const;
+const levelsFrom = (start: number, max: number): number[] => { const out: number[] = []; for (let l = Math.max(1, start || 1); l <= max; l++) out.push(l); return out; };
 
 const box: React.CSSProperties = {
   background: '#ffffff',
@@ -81,6 +82,11 @@ export function EscalationSettings({ api }: { api: Api }) {
       ...cfg.levels[li],
       people: cfg.levels[li].people.filter((_, x) => x !== pi),
     });
+
+  const addLevel = () => {
+    const n = cfg.levels.length + 1;
+    update({ levels: [...cfg.levels, { level: n, title: '', people: [] }], climbMinutes: { ...cfg.climbMinutes, [String(n - 1)]: cfg.climbMinutes[String(n - 1)] ?? 30 } });
+  };
 
   async function save() {
     if (!cfg) return;
@@ -178,6 +184,8 @@ export function EscalationSettings({ api }: { api: Api }) {
         </div>
       ))}
 
+      <button style={{ fontSize: 12, marginTop: 2 }} onClick={addLevel}>+ Add level</button>
+
       {/* CLIMB TIMINGS */}
       <h3 style={{ margin: '14px 0 6px' }}>2 · Time to climb each level</h3>
       <div style={{ fontSize: 12.5, opacity: 0.7, marginBottom: 8 }}>
@@ -265,17 +273,18 @@ export function EscalationSettings({ api }: { api: Api }) {
                       </option>
                     ))}
                   </select>
-                  <select
-                    style={inp}
-                    value={rule.startLevel}
-                    onChange={(e) => setRule({ startLevel: Number(e.target.value) })}
-                  >
-                    {cfg.levels.map((lv) => (
-                      <option key={lv.level} value={lv.level}>
-                        enters at L{lv.level} · {lv.title}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {cfg.levels.map((lv) => {
+                    const cur = rule.levels && rule.levels.length ? rule.levels : levelsFrom(rule.startLevel, cfg.levels.length);
+                    const on = cur.indexOf(lv.level) >= 0;
+                    return (
+                      <label key={lv.level} style={{ display: 'inline-flex', gap: 4, alignItems: 'center', fontSize: 12 }}>
+                        <input type="checkbox" checked={on} onChange={(e) => { const base = rule.levels && rule.levels.length ? rule.levels.slice() : levelsFrom(rule.startLevel, cfg.levels.length); const nx = e.target.checked ? Array.from(new Set([...base, lv.level])).sort((a, b) => a - b) : base.filter((x) => x !== lv.level); setRule({ levels: nx, startLevel: nx[0] || lv.level }); }} />
+                        L{lv.level} · {lv.title}
+                      </label>
+                    );
+                  })}
+                </div>
                 </div>
               );
             })}
