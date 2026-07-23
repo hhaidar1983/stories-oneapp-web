@@ -115,7 +115,8 @@ export function EscalationSettings({ api }: { api: Api }) {
 
   return (
     <>
-      <div className="sectionlabel">Escalation settings</div>
+      <div className="sectionlabel">Escalation chain</div>
+<p style={{ fontSize: 12, opacity: 0.7, marginTop: -2, marginBottom: 12 }}>Who gets alerted when a problem is raised, and how fast it climbs the chain. To choose which problems trigger and set deadlines per branch, use the Branch alerts tab.</p>
       <div style={{ marginBottom: 14 }}>
         <label style={lbl}>Branch scope</label>
         <select style={inp} value={branch} onChange={(e) => setBranch(e.target.value)}>
