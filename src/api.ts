@@ -172,6 +172,7 @@ export interface Level {
 export interface SectionRule {
   severity: 'critical' | 'high' | 'medium';
   startLevel: number;
+  levels?: number[];
   enabled: boolean;
 }
 export type TriggerKey = 'flagged_evidence' | 'not_submitted' | 'low_completion' | 'rushed';
