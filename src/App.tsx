@@ -98,7 +98,7 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
 
   return (
     <>
-      <div className="sectionlabel">Branch settings — triggers &amp; permissions</div>
+      <div className="sectionlabel">Branch alerts</div>
       <p style={{ fontSize: 12, opacity: 0.7, marginTop: -2, marginBottom: 12 }}>Per-branch alerting: master on/off, checklist deadlines (Beirut time), which triggers fire, and delivery channels. Changes apply on the engine's next check.</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 250px', minWidth: 230 }}>
@@ -394,9 +394,9 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
 }
 
 function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
-  const tiles: AppTile[] = [...APP_TILES];
+  const tiles: AppTile[] = APP_TILES.filter((a) => a.live || a.url);
   if (me && SETTINGS_ROLES.includes(me.role)) {
-    tiles.push({ key: 'admin', icon: '🛠️', name: 'Admin & Settings', sub: 'Escalation settings, branch triggers & people', live: true });
+    tiles.push({ key: 'admin', icon: '🛠️', name: 'Admin & Settings', sub: 'Escalation chain, branch alerts, people & checklists', live: true });
   }
   if (me && MANAGER_ROLES.includes(me.role)) {
     tiles.push({ key: 'faceenroll', icon: '🧑‍💼', name: 'Staff Face Setup', sub: 'Enroll faces & set login PINs', live: true });
@@ -439,8 +439,8 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
   return (
     <>
       <div className="hqtabs" style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <Tab id="settings" label="⚙ Settings" />
-        <Tab id="branches" label="Branch settings" />
+        <Tab id="settings" label="Escalation chain" />
+        <Tab id="branches" label="Branch alerts" />
         <Tab id="people" label="People" />
         <Tab id="checklists" label="Checklists" />
       </div>
