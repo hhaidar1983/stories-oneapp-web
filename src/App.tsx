@@ -401,6 +401,9 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
   if (me && MANAGER_ROLES.includes(me.role)) {
     tiles.push({ key: 'faceenroll', icon: '🧑‍💼', name: 'Staff Face Setup', sub: 'Enroll faces & set login PINs', live: true });
   }
+  if (me && HQ_ROLES.includes(me.role)) {
+    tiles.push({ key: 'reporting', icon: '📊', name: 'Reporting', sub: 'Live submissions, escalations & executive summary', live: true });
+  }
   return h(
     'div',
     null,
