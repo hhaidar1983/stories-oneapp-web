@@ -446,7 +446,7 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
   const icStyle = (bg: string): React.CSSProperties => ({ width: 44, height: 44, borderRadius: 11, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, background: bg });
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 6 };
   const glabel: React.CSSProperties = { fontSize: 11.5, fontWeight: 800, letterSpacing: 1.2, color: '#6B7D73', textTransform: 'uppercase', margin: '20px 2px 10px' };
-  const Card = ({ id, icon, tone, title, desc }: { id: typeof sec; icon: string; tone: string; title: string; desc: string }) => (
+  const Card = ({ id, icon, tone, title, desc }: { id: 'settings' | 'branches' | 'people' | 'checklists'; icon: string; tone: string; title: string; desc: string }) => (
     <button type="button" style={cardStyle} onClick={() => setSec(id)}>
       <span style={icStyle(tone)}>{icon}</span>
       <span style={{ flex: 1 }}>
