@@ -77,6 +77,20 @@ function blankItem(): ChecklistAdminItem {
   };
 }
 
+let __uidSeq = 1;
+const nextUid = () => 'u' + __uidSeq++;
+function withUid(it: ChecklistAdminItem): ChecklistAdminItem {
+  return (it as any)._uid ? it : ({ ...it, _uid: nextUid() } as any);
+}
+function withUidSections(secs: ChecklistAdminSection[] | null) {
+  return secs ? secs.map((sc) => ({ ...sc, items: sc.items.map(withUid) })) : secs;
+}
+function stripUid(it: ChecklistAdminItem): ChecklistAdminItem {
+  const clone: any = { ...(it as any) };
+  delete clone._uid;
+  return clone as ChecklistAdminItem;
+}
+
 export function ChecklistEditor({ api }: { api: Api }) {
   const [branches, setBranches] = useState<BranchConfigRow[]>([]);
   const [branch, setBranch] = useState('');
@@ -85,6 +99,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [drag, setDrag] = useState<{ key: string; from: number } | null>(null);
 
   useEffect(() => {
     api.branchConfigs().then(setBranches).catch(() => {});
@@ -100,7 +115,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
     setSavedKey(null);
     api
       .adminChecklists(branch)
-      .then((s) => setSections(s))
+      .then((sc) => setSections(withUidSections(sc)))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [api, branch]);
@@ -121,7 +136,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
   function addItem(key: string) {
     const sec = sections?.find((s) => s.key === key);
     if (!sec) return;
-    patchSection(key, [...sec.items, blankItem()]);
+    patchSection(key, [...sec.items, withUid(blankItem())]);
   }
   function removeItem(key: string, idx: number) {
     const sec = sections?.find((s) => s.key === key);
@@ -142,6 +157,22 @@ export function ChecklistEditor({ api }: { api: Api }) {
     items[j] = tmp;
     patchSection(key, items);
   }
+  function moveTo(key: string, from: number, to: number) {
+    if (from === to) return;
+    const sec = sections?.find((sc) => sc.key === key);
+    if (!sec) return;
+    const items = sec.items.slice();
+    const [m] = items.splice(from, 1);
+    items.splice(to, 0, m);
+    patchSection(key, items);
+  }
+  function insertAbove(key: string, idx: number) {
+    const sec = sections?.find((sc) => sc.key === key);
+    if (!sec) return;
+    const items = sec.items.slice();
+    items.splice(idx, 0, withUid(blankItem()));
+    patchSection(key, items);
+  }
 
   async function saveSection(key: string) {
     const sec = sections?.find((s) => s.key === key);
@@ -153,9 +184,9 @@ export function ChecklistEditor({ api }: { api: Api }) {
       const updated = await api.saveChecklistSection({
         branchId: branch,
         key,
-        items: sec.items,
+        items: sec.items.map(stripUid),
       });
-      setSections(updated);
+      setSections(withUidSections(updated));
       setSavedKey(key);
     } catch (e: any) {
       setError(e.message);
@@ -169,7 +200,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
     setError(null);
     try {
       const updated = await api.resetChecklistSection(branch, key);
-      setSections(updated);
+      setSections(withUidSections(updated));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -259,20 +290,42 @@ export function ChecklistEditor({ api }: { api: Api }) {
 
             {sec.items.map((it, idx) => (
               <div
-                key={idx}
+                key={(it as any)._uid ?? idx}
+                onDragOver={(e) => {
+                  if (drag && drag.key === sec.key) e.preventDefault();
+                }}
+                onDrop={() => {
+                  if (drag && drag.key === sec.key) moveTo(sec.key, drag.from, idx);
+                  setDrag(null);
+                }}
                 style={{
                   border: '1px solid #EEF1EF',
                   borderRadius: 8,
                   padding: 10,
                   marginBottom: 8,
+                  background:
+                    drag && drag.key === sec.key && drag.from === idx
+                      ? '#F0F6F2'
+                      : '#fff',
                 }}
               >
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                    <div
+                      draggable
+                      onDragStart={() => setDrag({ key: sec.key, from: idx })}
+                      onDragEnd={() => setDrag(null)}
+                      title="Drag to reorder"
+                      style={{ cursor: 'grab', color: '#9AA8A0', fontSize: 16, lineHeight: 1, userSelect: 'none' }}
+                    >
+                      ⣿
+                    </div>
+                    <div style={{ fontSize: 11, color: '#6B7D73' }}>{idx + 1}</div>
                     <button
                       style={btnGhost}
                       onClick={() => move(sec.key, idx, -1)}
                       disabled={idx === 0}
+                      title="Move up"
                     >
                       ↑
                     </button>
@@ -280,8 +333,16 @@ export function ChecklistEditor({ api }: { api: Api }) {
                       style={btnGhost}
                       onClick={() => move(sec.key, idx, 1)}
                       disabled={idx === sec.items.length - 1}
+                      title="Move down"
                     >
                       ↓
+                    </button>
+                    <button
+                      style={btnGhost}
+                      onClick={() => insertAbove(sec.key, idx)}
+                      title="Insert a new task above this one"
+                    >
+                      ＋↑
                     </button>
                   </div>
                   <div style={{ flex: 1 }}>
