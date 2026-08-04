@@ -17,6 +17,7 @@ import { Escalations } from './Escalations';
 import { EscalationSettings } from './EscalationSettings';
 import { ExecSummary } from './ExecSummary';
 import { ChecklistEditor } from './ChecklistEditor';
+import { ManageChecklists } from './ManageChecklists';
 import { Login } from './Login';
 import { FaceEnroll } from './FaceEnroll';
 
@@ -434,7 +435,7 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
 }
 
 function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
-  const [sec, setSec] = useState<'' | 'settings' | 'branches' | 'people' | 'checklists'>('');
+  const [sec, setSec] = useState<'' | 'settings' | 'branches' | 'people' | 'checklists' | 'manage-checklists'>('');
   if (sec) {
     return (
       <>
@@ -443,6 +444,7 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
         {sec === 'branches' && <BranchSettings api={api} />}
         {sec === 'people' && <People api={api} />}
         {sec === 'checklists' && <ChecklistEditor api={api} />}
+        {sec === 'manage-checklists' && <ManageChecklists api={api} />}
       </>
     );
   }
@@ -450,7 +452,7 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
   const icStyle = (bg: string): React.CSSProperties => ({ width: 44, height: 44, borderRadius: 11, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, background: bg });
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 6 };
   const glabel: React.CSSProperties = { fontSize: 11.5, fontWeight: 800, letterSpacing: 1.2, color: '#6B7D73', textTransform: 'uppercase', margin: '20px 2px 10px' };
-  const Card = ({ id, icon, tone, title, desc }: { id: 'settings' | 'branches' | 'people' | 'checklists'; icon: string; tone: string; title: string; desc: string }) => (
+  const Card = ({ id, icon, tone, title, desc }: { id: 'settings' | 'branches' | 'people' | 'checklists' | 'manage-checklists'; icon: string; tone: string; title: string; desc: string }) => (
     <button type="button" style={cardStyle} onClick={() => setSec(id)}>
       <span style={icStyle(tone)}>{icon}</span>
       <span style={{ flex: 1 }}>
@@ -473,6 +475,7 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
       <div style={grid}>
         <Card id="people" icon="👥" tone="#e6eefb" title="People & permissions" desc="Add people, set their role and branch, and control access." />
         <Card id="checklists" icon="📋" tone="#f0ecfa" title="Checklists" desc="Edit Opening, Handover and Closing items, per branch." />
+        <Card id="manage-checklists" icon="📝" tone="#e8f4ea" title="Manage Checklists" desc="Define the global checklist catalog and set which types each branch runs." />
       </div>
     </>
   );
