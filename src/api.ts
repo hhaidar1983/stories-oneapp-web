@@ -14,10 +14,26 @@ export interface ChecklistItem {
 }
 export interface Checklist {
   id: string;
-  key: 'opening' | 'handover' | 'closing';
+  key: string;
   name: string;
   icon: string | null;
   items: ChecklistItem[];
+}
+
+export interface ChecklistTypeRow {
+  key: string;
+  name: string;
+  icon: string | null;
+  sort: number;
+  active: boolean;
+}
+
+export interface BranchChecklistRow {
+  typeKey: string;
+  name: string;
+  icon: string | null;
+  sort: number;
+  active: boolean;
 }
 
 export interface UploadToken {
@@ -387,6 +403,21 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
       req<{ ok: boolean }>('/faceauth/set-pin', { method: 'POST', body: JSON.stringify({ staffId, pin }) }),
     importStaff: (staff: StaffImportRow[]) =>
       req<StaffImportResult>('/faceauth/import', { method: 'POST', body: JSON.stringify({ staff }) }),
+    // --- Checklist catalog & branch assignments ---------------------------
+    listChecklistTypes: () => req<ChecklistTypeRow[]>('/admin/checklist-types'),
+    createChecklistType: (body: { name: string; icon?: string | null; sort?: number }) =>
+      req<ChecklistTypeRow>('/admin/checklist-types', { method: 'POST', body: JSON.stringify(body) }),
+    updateChecklistType: (key: string, body: Partial<{ name: string; icon: string | null; sort: number; active: boolean }>) =>
+      req<ChecklistTypeRow>('/admin/checklist-types/' + encodeURIComponent(key), { method: 'PATCH', body: JSON.stringify(body) }),
+    deleteChecklistType: (key: string) =>
+      req<{ ok: boolean }>('/admin/checklist-types/' + encodeURIComponent(key), { method: 'DELETE' }),
+    getBranchAssignments: (branchId: string) =>
+      req<BranchChecklistRow[]>('/admin/checklists/assignments?branch=' + encodeURIComponent(branchId)),
+    putBranchAssignments: (body: { branchId: string; assignments: { typeKey: string; sort: number; active: boolean }[] }) =>
+      req<BranchChecklistRow[]>('/admin/checklists/assignments', { method: 'PUT', body: JSON.stringify(body) }),
+    cloneChecklists: (body: { fromBranch: string; toBranches: string[]; mode: 'replace' | 'merge'; include: 'structure+items' | 'structure' }) =>
+      req<{ fromBranch: string; toBranches: number; mode: string; include: string; results: { branchId: string; ok: boolean; error?: string }[] }>(
+        '/admin/checklists/clone', { method: 'POST', body: JSON.stringify(body) }),
   };
 }
 
@@ -431,7 +462,7 @@ export type Api = ReturnType<typeof createApi>;
 
 /** Upload a captured file straight to Blob storage using the one-off token. */
 export async function uploadToBlob(token: UploadToken, file: File): Promise<void> {
-  // Demo mode: the backend returns a stub URL — nothing to upload to.
+  // Demo mode: the backend returns a stub URL â nothing to upload to.
   if (token.uploadUrl.startsWith('https://STUB')) return;
   const res = await fetch(token.uploadUrl, {
     method: token.method || 'PUT',
