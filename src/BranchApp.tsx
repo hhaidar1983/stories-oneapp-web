@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Api, Checklist, ChecklistItem, MediaRef, Me, SubmissionItemInput, uploadToBlob } from './api';
 
-// All Stories branches (Dynamics 365 BC store codes S0001âS0025). Mirrors the
+// All Stories branches (Dynamics 365 BC store codes S0001–S0025). Mirrors the
 // backend seed so the picker lists every branch; defaults to the signed-in
 // user's home branch when they have one.
 const DEMO_BRANCHES = [
-  { id: 'S0001', name: 'Store 1 â Jnah' },
+  { id: 'S0001', name: 'Store 1 — Jnah' },
   { id: 'S0002', name: 'Ramlet El Bayda' },
   { id: 'S0003', name: 'Verdun 2' },
-  { id: 'S0004', name: 'Cubic â Sin el Fil' },
-  { id: 'S0005', name: 'Khalde 1 â MATTA' },
+  { id: 'S0004', name: 'Cubic — Sin el Fil' },
+  { id: 'S0005', name: 'Khalde 1 — MATTA' },
   { id: 'S0006', name: 'Dunes' },
-  { id: 'S0007', name: 'Khalde 2 â Drive Thru' },
+  { id: 'S0007', name: 'Khalde 2 — Drive Thru' },
   { id: 'S0008', name: 'Ain Mreisseh' },
   { id: 'S0009', name: 'Airport Road' },
   { id: 'S0010', name: 'Zalqa' },
@@ -21,10 +21,10 @@ const DEMO_BRANCHES = [
   { id: 'S0014', name: 'Mansourieh' },
   { id: 'S0015', name: 'Batroun' },
   { id: 'S0016', name: 'Aley' },
-  { id: 'S0017', name: 'Rawche â Arjan' },
+  { id: 'S0017', name: 'Rawche — Arjan' },
   { id: 'S0018', name: 'Amioun' },
   { id: 'S0019', name: 'Centromall' },
-  { id: 'S0020', name: 'Rabieh â BAYADA' },
+  { id: 'S0020', name: 'Rabieh — BAYADA' },
   { id: 'S0021', name: 'Saida' },
   { id: 'S0022', name: 'Tyre' },
   { id: 'S0023', name: 'Jbeil' },
@@ -37,7 +37,7 @@ const DEMO_BRANCHES = [
 type Value = { valueCheck?: 'pass' | 'fail'; valueNumber?: number; valueText?: string; media?: MediaRef[] };
 type Values = Record<string, Value>;
 
-// Local calendar date (branch timezone), not UTC â 'en-CA' formats as YYYY-MM-DD.
+// Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
 const today = () => new Date().toLocaleDateString('en-CA');
 
 function isFilled(item: ChecklistItem, v: Value | undefined): boolean {
@@ -103,7 +103,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     setError(null);
     setOpen(c);
     // Ask the server to open a timed session (start clock is server-side, so it
-    // can't be faked). If it fails â e.g. demo backend â fall back to a local
+    // can't be faked). If it fails — e.g. demo backend — fall back to a local
     // clock so timing still works, just without server verification of the total.
     try {
       const s = await api.startSession({ branchId, templateKey: c.key, businessDate: today() });
@@ -189,9 +189,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
         sessionId: session?.sessionId || undefined,
         items,
       });
-      const mins = res.durationSec != null ? ` Â· took ${Math.floor(res.durationSec / 60)}m ${res.durationSec % 60}s` : '';
-      const pace = res.paceFlag ? ' â  flagged as too fast' : '';
-      alert(`Submitted â status: ${res.status.toUpperCase()} (${res.completionPct}%)${mins}${pace}`);
+      const mins = res.durationSec != null ? ` · took ${Math.floor(res.durationSec / 60)}m ${res.durationSec % 60}s` : '';
+      const pace = res.paceFlag ? ' ⚠ flagged as too fast' : '';
+      alert(`Submitted — status: ${res.status.toUpperCase()} (${res.completionPct}%)${mins}${pace}`);
       setValues({}); // clear the draft so the card grid reflects reality
       setCompletedAt({});
       setSession(null);
@@ -209,9 +209,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     return (
       <>
         <div className="detailhead">
-          <button className="backbtn" onClick={() => setOpen(null)}>â Back</button>
+          <button className="backbtn" onClick={() => setOpen(null)}>← Back</button>
           <h2>{open.icon} {open.name}</h2>
-          <span className="prog">{p.done}/{p.total} Â· {p.pct}%</span>
+          <span className="prog">{p.done}/{p.total} · {p.pct}%</span>
         </div>
         {error && <div className="err">{error}</div>}
         {(() => {
@@ -228,7 +228,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
               out.push(
                 <div key={'sec-' + section} className="checklist-section" onClick={() => setCollapsed((c) => ({ ...c, [section]: !c[section] }))}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', margin: '18px 0 8px', padding: '9px 12px', background: '#123524', color: '#eaf3ee', borderRadius: 8 }}>
-                  <span style={{ fontWeight: 600, fontSize: 13 }}>{col ? 'â¸' : 'â¾'} {section}</span>
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{col ? '▸' : '▾'} {section}</span>
                   <span style={{ fontSize: 12, opacity: 0.65 }}>{done}/{req.length}</span>
                 </div>,
               );
@@ -246,9 +246,9 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
           return out;
         })()}
         <div className="submitbar" style={{ position: 'static' }}>
-          <div className="txt">{missing.length ? `${missing.length} required item(s) left` : 'All required items complete â'}</div>
+          <div className="txt">{missing.length ? `${missing.length} required item(s) left` : 'All required items complete ✓'}</div>
           <button className="primary" disabled={missing.length > 0 || busy === 'submit'} onClick={submit}>
-            {busy === 'submit' ? 'Submittingâ¦' : 'Submit to Head Office'}
+            {busy === 'submit' ? 'Submitting…' : 'Submit to Head Office'}
           </button>
         </div>
         {cam && (
@@ -273,7 +273,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
             ))}
           </select>
         </div>
-        <span className="who">Signed in as <b>{me?.name || 'â'}</b> Â· {me?.role || 'staff'}</span>
+        <span className="who">Signed in as <b>{me?.name || '—'}</b> · {me?.role || 'staff'}</span>
       </div>
       {error && <div className="err">{error}</div>}
       <div className="sectionlabel">Today's checklists</div>
@@ -317,7 +317,7 @@ function ItemRow(props: {
   return (
     <div className={`item ${done ? 'done' : ''}`}>
       <div className="itemtop">
-        <span style={{ color: done ? 'var(--green)' : 'var(--line)', fontSize: 18 }}>{done ? 'â' : 'â'}</span>
+        <span style={{ color: done ? 'var(--green)' : 'var(--line)', fontSize: 18 }}>{done ? '✓' : '○'}</span>
         <div style={{ flex: 1 }}>
           <div className="lbl">{item.label}</div>
           
@@ -327,8 +327,8 @@ function ItemRow(props: {
 
       {item.type === 'check' && (
         <div className="control"><div className="checkrow">
-          <button className={`cbtn pass ${value?.valueCheck === 'pass' ? 'sel' : ''}`} onClick={() => props.onCheck('pass')}>â Pass</button>
-          <button className={`cbtn fail ${value?.valueCheck === 'fail' ? 'sel' : ''}`} onClick={() => props.onCheck('fail')}>â Fail</button>
+          <button className={`cbtn pass ${value?.valueCheck === 'pass' ? 'sel' : ''}`} onClick={() => props.onCheck('pass')}>✓ Pass</button>
+          <button className={`cbtn fail ${value?.valueCheck === 'fail' ? 'sel' : ''}`} onClick={() => props.onCheck('fail')}>✕ Fail</button>
         </div></div>
       )}
       {item.type === 'number' && (
@@ -336,38 +336,38 @@ function ItemRow(props: {
           <input type="number" step="0.1" value={num ?? ''} placeholder="0"
             onChange={(e) => props.onNumber(parseFloat(e.target.value))} />
           <span className="unit">{item.unit}</span>
-          {!item.noRange && item.min != null && <span className="unit">Â· target {item.min}â{item.max}{item.unit}</span>}
+          {!item.noRange && item.min != null && <span className="unit">· target {item.min}–{item.max}{item.unit}</span>}
           {inRange != null && <span className={`range ${inRange ? 'ok' : 'bad'}`}>{inRange ? 'in range' : 'out of range'}</span>}
         </div></div>
       )}
       {item.type === 'text' && (
         <div className="control">
-          <textarea placeholder="Type a noteâ¦" value={value?.valueText ?? ''} onChange={(e) => props.onText(e.target.value)} />
+          <textarea placeholder="Type a note…" value={value?.valueText ?? ''} onChange={(e) => props.onText(e.target.value)} />
         </div>
       )}
       {(item.type === 'photo' || item.type === 'video') && (
         <div className="control"><div className="capture">
           <button className={`capbtn ${item.type === 'video' ? 'video' : ''}`}
             onClick={() => props.onCamera(item, item.type as 'photo' | 'video')}>
-            {item.type === 'photo' ? 'ð·' : 'ð¥'} {props.busy ? 'Uploadingâ¦' : value?.media?.length ? 'Retake' : item.type === 'photo' ? 'Take photo' : 'Record video'}
+            {item.type === 'photo' ? '📷' : '🎥'} {props.busy ? 'Uploading…' : value?.media?.length ? 'Retake' : item.type === 'photo' ? 'Take photo' : 'Record video'}
           </button>
-          {value?.media?.length ? <span className="captured-tag">â captured Â· stamped</span> : null}
+          {value?.media?.length ? <span className="captured-tag">✓ captured · stamped</span> : null}
         </div></div>
       )}
         {item.needsPhoto && item.type !== 'photo' && (
           <div className="control"><div className="capture">
             <button className="capbtn" onClick={() => props.onCamera(item, 'photo')}>
-              ð· {props.busy ? 'Uploadingâ¦' : (value?.media?.some((m) => m.kind === 'photo') ? 'Retake photo' : 'Add photo')}
+              📷 {props.busy ? 'Uploading…' : (value?.media?.some((m) => m.kind === 'photo') ? 'Retake photo' : 'Add photo')}
             </button>
-            {value?.media?.some((m) => m.kind === 'photo') ? <span className="captured-tag">â photo Â· stamped</span> : null}
+            {value?.media?.some((m) => m.kind === 'photo') ? <span className="captured-tag">✓ photo · stamped</span> : null}
           </div></div>
         )}
         {item.needsVideo && item.type !== 'video' && (
           <div className="control"><div className="capture">
             <button className="capbtn video" onClick={() => props.onCamera(item, 'video')}>
-              ð¥ {props.busy ? 'Uploadingâ¦' : (value?.media?.some((m) => m.kind === 'video') ? 'Retake video' : 'Add video')}
+              🎥 {props.busy ? 'Uploading…' : (value?.media?.some((m) => m.kind === 'video') ? 'Retake video' : 'Add video')}
             </button>
-            {value?.media?.some((m) => m.kind === 'video') ? <span className="captured-tag">â video Â· stamped</span> : null}
+            {value?.media?.some((m) => m.kind === 'video') ? <span className="captured-tag">✓ video · stamped</span> : null}
           </div></div>
         )}
     </div>
@@ -446,7 +446,7 @@ function CameraCapture({
         }
         setReady(true);
       } catch (e: any) {
-        setErr('Camera unavailable â please allow camera access on this phone, then reopen. (' + (e?.message || e) + ')');
+        setErr('Camera unavailable — please allow camera access on this phone, then reopen. (' + (e?.message || e) + ')');
       }
     })();
     if (geoCache) {
@@ -472,7 +472,7 @@ function CameraCapture({
     const lines = [
       branchName,
       new Date().toLocaleString(),
-      geo ? `GPS ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} (Â±${Math.round(geo.acc)}m)` : 'GPS unavailable',
+      geo ? `GPS ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)} (±${Math.round(geo.acc)}m)` : 'GPS unavailable',
     ];
     const pad = Math.round(w * 0.02);
     const fs = Math.max(13, Math.round(w * 0.026));
@@ -566,8 +566,8 @@ function CameraCapture({
   }
 
   const geoLabel = geoState === 'ok' && geo
-    ? `ð ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}`
-    : geoState === 'pending' ? 'ð locatingâ¦' : 'ð location off';
+    ? `📍 ${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}`
+    : geoState === 'pending' ? '📍 locating…' : '📍 location off';
 
   return (
     <div className="camoverlay">
@@ -583,7 +583,7 @@ function CameraCapture({
           {ready && !err && (
             <div style={{ position: 'absolute', bottom: 160, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, zIndex: 6 }}>
               {[1, 2, 3].map((z) => (
-                <button key={z} onClick={() => { setZoom(z); zoomRef.current = z; }} style={{ background: zoom === z ? 'rgba(8,108,66,0.95)' : 'rgba(0,0,0,0.55)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: 999, padding: '6px 13px', fontSize: 14, fontWeight: 700 }}>{z}Ã</button>
+                <button key={z} onClick={() => { setZoom(z); zoomRef.current = z; }} style={{ background: zoom === z ? 'rgba(8,108,66,0.95)' : 'rgba(0,0,0,0.55)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: 999, padding: '6px 13px', fontSize: 14, fontWeight: 700 }}>{z}×</button>
               ))}
             </div>
           )}
@@ -598,7 +598,7 @@ function CameraCapture({
             </div>
           )}
           <div className="camhint">
-            {recording ? 'Recording â tap the button to stop' : kind === 'photo' ? 'Live photo Â· stamped with branch, time & GPS' : 'Live video Â· stamped with branch, time & GPS'}
+            {recording ? 'Recording — tap the button to stop' : kind === 'photo' ? 'Live photo · stamped with branch, time & GPS' : 'Live video · stamped with branch, time & GPS'}
           </div>
           <div className="cambar">
             <button className="camtext" onClick={() => { stopStream(); onCancel(); }}>Cancel</button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Api, BranchChecklistRow, BranchConfigRow, ChecklistTypeRow } from './api';
 
-// ââ Shared styles ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Shared styles ────────────────────────────────────────────────────────────
 
 const box: React.CSSProperties = {
   background: '#ffffff',
@@ -54,7 +54,7 @@ const btnDanger: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-// ââ Catalog panel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Catalog panel ────────────────────────────────────────────────────────────
 
 function CatalogPanel({ api }: { api: Api }) {
   const [types, setTypes] = useState<ChecklistTypeRow[] | null>(null);
@@ -123,10 +123,10 @@ function CatalogPanel({ api }: { api: Api }) {
       {error && (
         <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E', marginBottom: 10 }}>{error}</div>
       )}
-      {!types && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loadingâ¦</div>}
+      {!types && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loading…</div>}
       {types && types.map((t) => (
         <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #EEF1EF' }}>
-          <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{t.icon || 'ð'}</span>
+          <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{t.icon || '📋'}</span>
           <span style={{ flex: 1 }}>
             <span style={{ fontWeight: 600, fontSize: 13 }}>{t.name}</span>
             <span style={{ marginLeft: 8, fontSize: 11, color: '#9AA8A0' }}>{t.key}</span>
@@ -162,17 +162,17 @@ function CatalogPanel({ api }: { api: Api }) {
         </div>
         <div style={{ flex: '0 0 80px' }}>
           <label style={lbl}>Icon (emoji)</label>
-          <input style={{ ...inp, width: 80 }} value={newIcon} placeholder="ð§" maxLength={4} onChange={(e) => setNewIcon(e.target.value)} />
+          <input style={{ ...inp, width: 80 }} value={newIcon} placeholder="🔧" maxLength={4} onChange={(e) => setNewIcon(e.target.value)} />
         </div>
         <button style={btn} disabled={saving || !newName.trim()} onClick={addType}>
-          {saving ? 'Addingâ¦' : '+ Add type'}
+          {saving ? 'Adding…' : '+ Add type'}
         </button>
       </div>
     </div>
   );
 }
 
-// ââ Branch assignments panel âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Branch assignments panel ─────────────────────────────────────────────────
 
 function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }) {
   const [branch, setBranch] = useState('');
@@ -233,14 +233,14 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
       <div style={{ marginBottom: 12 }}>
         <label style={lbl}>Branch</label>
         <select style={inp} value={branch} onChange={(e) => setBranch(e.target.value)}>
-          <option value="">Select a branchâ¦</option>
+          <option value="">Select a branch…</option>
           {branches.map((b) => (
             <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>
           ))}
         </select>
       </div>
       {error && <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E', marginBottom: 10 }}>{error}</div>}
-      {branch && !rows && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loadingâ¦</div>}
+      {branch && !rows && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loading…</div>}
       {rows && rows.map((r, idx) => (
         <div key={r.typeKey} style={{
           display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0',
@@ -248,10 +248,10 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
           opacity: r.active ? 1 : 0.5,
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <button style={{ ...btnGhost, padding: '2px 7px', fontSize: 11 }} onClick={() => move(idx, -1)} disabled={idx === 0}>â</button>
-            <button style={{ ...btnGhost, padding: '2px 7px', fontSize: 11 }} onClick={() => move(idx, 1)} disabled={idx === rows.length - 1}>â</button>
+            <button style={{ ...btnGhost, padding: '2px 7px', fontSize: 11 }} onClick={() => move(idx, -1)} disabled={idx === 0}>↑</button>
+            <button style={{ ...btnGhost, padding: '2px 7px', fontSize: 11 }} onClick={() => move(idx, 1)} disabled={idx === rows.length - 1}>↓</button>
           </div>
-          <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{r.icon || 'ð'}</span>
+          <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{r.icon || '📋'}</span>
           <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{r.name}</span>
           <span
             style={{
@@ -268,15 +268,15 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
       ))}
       {rows && (
         <div style={{ display: 'flex', gap: 10, marginTop: 12, alignItems: 'center' }}>
-          <button style={btn} disabled={saving} onClick={save}>{saving ? 'Savingâ¦' : 'Save assignments'}</button>
-          {saved && <span style={{ fontSize: 12, color: '#086C42' }}>Saved â</span>}
+          <button style={btn} disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save assignments'}</button>
+          {saved && <span style={{ fontSize: 12, color: '#086C42' }}>Saved ✓</span>}
         </div>
       )}
     </div>
   );
 }
 
-// ââ Clone panel ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Clone panel ──────────────────────────────────────────────────────────────
 
 function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }) {
   const [fromBranch, setFromBranch] = useState('');
@@ -322,7 +322,7 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
         <div style={{ flex: '1 1 180px' }}>
           <label style={lbl}>Copy FROM branch</label>
           <select style={inp} value={fromBranch} onChange={(e) => { setFromBranch(e.target.value); setToBranches([]); setResult(null); }}>
-            <option value="">Select source branchâ¦</option>
+            <option value="">Select source branch…</option>
             {branches.map((b) => (
               <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>
             ))}
@@ -331,8 +331,8 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
         <div style={{ flex: '0 0 auto' }}>
           <label style={lbl}>Mode</label>
           <select style={inp} value={mode} onChange={(e) => setMode(e.target.value as 'replace' | 'merge')}>
-            <option value="merge">Merge â add missing only</option>
-            <option value="replace">Replace â clear and overwrite</option>
+            <option value="merge">Merge — add missing only</option>
+            <option value="replace">Replace — clear and overwrite</option>
           </select>
         </div>
         <div style={{ flex: '0 0 auto' }}>
@@ -359,7 +359,7 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
                   <span style={{ flex: 1, fontSize: 13 }}>{b.branch_name || b.branch_id}</span>
                   {res && (
                     <span style={{ fontSize: 11, color: res.ok ? '#086C42' : '#B4442E' }}>
-                      {res.ok ? 'â Done' : 'â ' + res.error}
+                      {res.ok ? '✓ Done' : '✗ ' + res.error}
                     </span>
                   )}
                 </label>
@@ -368,7 +368,7 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button style={btn} disabled={running || toBranches.length === 0} onClick={run}>
-              {running ? 'Cloningâ¦' : `Clone to ${toBranches.length || 'selected'} branch${toBranches.length !== 1 ? 'es' : ''}`}
+              {running ? 'Cloning…' : `Clone to ${toBranches.length || 'selected'} branch${toBranches.length !== 1 ? 'es' : ''}`}
             </button>
             {toBranches.length > 0 && !running && (
               <button style={btnGhost} onClick={() => setToBranches(targetBranches.map((b) => b.branch_id))}>
@@ -387,7 +387,7 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
   );
 }
 
-// ââ Main export ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Main export ──────────────────────────────────────────────────────────────
 
 export function ManageChecklists({ api }: { api: Api }) {
   const [branches, setBranches] = useState<BranchConfigRow[]>([]);
