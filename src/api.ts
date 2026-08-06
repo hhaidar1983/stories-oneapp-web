@@ -462,7 +462,7 @@ export type Api = ReturnType<typeof createApi>;
 
 /** Upload a captured file straight to Blob storage using the one-off token. */
 export async function uploadToBlob(token: UploadToken, file: File): Promise<void> {
-  // Demo mode: the backend returns a stub URL â nothing to upload to.
+  // Demo mode: the backend returns a stub URL — nothing to upload to.
   if (token.uploadUrl.startsWith('https://STUB')) return;
   const res = await fetch(token.uploadUrl, {
     method: token.method || 'PUT',
