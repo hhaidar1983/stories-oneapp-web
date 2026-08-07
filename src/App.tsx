@@ -323,6 +323,12 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
   const [token, setToken] = useState<string | null>(() =>
     typeof window !== 'undefined' ? window.localStorage.getItem('stories.session') : null,
   );
+  // Opt-in escape hatch for admins/testers: append ?dev=1 to the URL to get the
+  // old quick demo-user picker instead of the real Face/PIN login screen.
+  // Without it, everyone goes through the real login flow.
+  const [devMode] = useState(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dev'),
+  );
 
   useEffect(() => {
     if (!msalEnabled || !pca) return;
@@ -339,8 +345,10 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
       mode: msalEnabled ? 'msal' : 'demo',
       ready,
       account,
-      // Signed in by a face/PIN token, by Microsoft, or (dev only) always.
-      signedIn: !!token || (msalEnabled ? !!account : true),
+      // Signed in by a face/PIN token, by Microsoft, or (only with ?dev=1) the
+      // quick demo picker. Everyone else sees the real login screen.
+      signedIn: !!token || (msalEnabled ? !!account : devMode),
+      devMode,
       devUserId,
       setDevUserId,
       sessionToken: token,
@@ -387,7 +395,7 @@ function AuthProvider({ children }: { children: (auth: Auth) => JSX.Element }) {
         }
       },
     }),
-    [ready, account, devUserId, token],
+    [ready, account, devUserId, token, devMode],
   );
 
   if (!ready) return <div className="center">Loading…</div>;
@@ -508,7 +516,7 @@ function Shell() {
         </div>
         <div className="spacer" />
         <div className="authbox">
-          {auth.mode === 'demo' ? (
+          {auth.mode === 'demo' && auth.devMode ? (
             <select value={auth.devUserId} onChange={(e) => auth.setDevUserId(e.target.value)}>
               {[...DEMO_USERS, DEMO_ADMIN].map((u) => (
                 <option key={u.id} value={u.id}>
