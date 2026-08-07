@@ -65,6 +65,11 @@ export function LivenessCheck({
         onError={(err) => {
           setError(err?.error?.message || err?.state || 'The check failed — please try again in good light.');
         }}
+        components={{
+          // Hides the built-in photosensitivity notice on the start screen — it was
+          // pushing the "Start video check" button below the fold on smaller screens.
+          PhotosensitiveWarning: () => null,
+        }}
         config={{
           credentialProvider: async () => {
             const c = await api.faceCreds();
