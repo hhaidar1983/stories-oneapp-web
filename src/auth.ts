@@ -30,6 +30,9 @@ export interface Auth {
   ready: boolean;
   account: AccountInfo | null;
   signedIn: boolean;
+  /** True only when the page was opened with ?dev=1 — gates the quick demo-user
+   * picker so ordinary staff always see the real Face/PIN login screen. */
+  devMode: boolean;
   devUserId: string;
   setDevUserId: (id: string) => void;
   login: () => Promise<void>;
