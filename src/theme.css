@@ -234,7 +234,7 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
   font-size: 17px; font-weight: 600; color: #123524; cursor: pointer; transition: transform .06s, box-shadow .15s; }
 .bigbtn:hover { box-shadow: 0 4px 16px rgba(18,53,36,.12); }
 .bigbtn:active { transform: translateY(1px); }
-.bigbtn.primary { background: #123524; color: #eaf3ee; border-color: #123524; }
+.bigbtn.primary { background: #123524; color: #eaf3ee; border-color: #123524; margin-left: 0; width: 100%; }
 .bigbtn.subtle { background: #f4f8f6; color: #365; font-weight: 500; }
 .bigicon { font-size: 22px; }
 
