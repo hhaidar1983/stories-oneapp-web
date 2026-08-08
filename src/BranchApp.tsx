@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Api, Checklist, ChecklistItem, MediaRef, Me, SubmissionItemInput, uploadToBlob } from './api';
+import { Api, Checklist, ChecklistItem, MediaRef, Me, SubmissionItemInput, SubmissionSummary, uploadToBlob } from './api';
 
 // All Stories branches (Dynamics 365 BC store codes S0001–S0025). Mirrors the
 // backend seed so the picker lists every branch; defaults to the signed-in
@@ -74,11 +74,26 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
   // Which item (if any) is currently capturing through the in-app camera.
   const [cam, setCam] = useState<{ item: ChecklistItem; kind: 'photo' | 'video' } | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Today's submission status per checklist key (e.g. 'opening' -> flagged),
+  // so a checklist already sent to head office shows as done instead of a
+  // misleading blank "TO DO" tile that lets someone redo it from scratch.
+  const [todayStatus, setTodayStatus] = useState<Record<string, SubmissionSummary>>({});
   const branchLabel = DEMO_BRANCHES.find((b) => b.id === branchId)?.name || me?.branch?.name || branchId;
 
   useEffect(() => {
     if (me?.branch?.id) setBranchId(me.branch.id);
   }, [me]);
+
+  async function refreshTodayStatus(bId: string) {
+    try {
+      const rows = await api.submissions(`branchId=${bId}&date=${today()}`);
+      const map: Record<string, SubmissionSummary> = {};
+      for (const r of rows) map[r.checklist] = r;
+      setTodayStatus(map);
+    } catch {
+      // Non-critical: worst case the tiles fall back to the local draft progress.
+    }
+  }
 
   useEffect(() => {
     let stale = false; // ignore a slow response after the branch changed again
@@ -92,12 +107,28 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       .catch((e) => {
         if (!stale) setError(e.message);
       });
+    refreshTodayStatus(branchId);
     return () => {
       stale = true;
     };
   }, [api, branchId]);
 
   async function openChecklist(c: Checklist) {
+    // A checklist already submitted today (and not yet returned for correction)
+    // cannot be resubmitted — the server will reject it at the final step with
+    // a conflict error. Tell the person clearly up front instead of letting them
+    // redo the whole checklist only to be blocked on "Submit to Head Office".
+    const already = todayStatus[c.key];
+    if (already && already.status !== 'returned') {
+      const statusLabel =
+        already.status === 'flagged'
+          ? 'submitted and flagged for head-office review'
+          : already.status === 'approved'
+          ? 'submitted and already approved'
+          : 'submitted and is awaiting head-office review';
+      alert(`${c.name} was already ${statusLabel} today (${already.completionPct}% complete). It will reopen here if head office returns it for changes.`);
+      return;
+    }
     setValues({});
     setCompletedAt({});
     setError(null);
@@ -108,7 +139,11 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     try {
       const s = await api.startSession({ branchId, templateKey: c.key, businessDate: today() });
       setSession({ sessionId: s.sessionId, startedAtMs: Date.now() });
-    } catch {
+    } catch (e: any) {
+      // Most failures here are the same "already submitted" conflict — surface
+      // it instead of silently falling back, so the person isn't left filling
+      // out a checklist that can never actually be submitted.
+      setError(e?.message || 'Could not start this checklist — please try again.');
       setSession({ sessionId: '', startedAtMs: Date.now() });
     }
   }
@@ -196,6 +231,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       setCompletedAt({});
       setSession(null);
       setOpen(null);
+      refreshTodayStatus(branchId); // tile badge reflects the new status right away
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -280,16 +316,27 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       <div className="cards">
         {checklists.map((c) => {
           const p = progress(c, values);
+          // Already submitted today (and not sent back for correction) wins over
+          // the local draft progress — otherwise a fresh page load shows "TO DO"
+          // for a checklist that was, in fact, already sent to head office.
+          const st = todayStatus[c.key];
+          const already = st && st.status !== 'returned';
+          const pct = already ? st!.completionPct : p.pct;
+          let badgeText = pct >= 100 ? 'READY' : pct > 0 ? 'IN PROGRESS' : 'TO DO';
+          let badgeClass = pct >= 100 ? 'b-done' : pct > 0 ? 'b-prog' : 'b-todo';
+          if (already) {
+            if (st!.status === 'flagged') { badgeText = 'IN REVIEW'; badgeClass = 'b-sub'; }
+            else if (st!.status === 'approved') { badgeText = 'APPROVED'; badgeClass = 'b-sub'; }
+            else { badgeText = 'SUBMITTED'; badgeClass = 'b-sub'; }
+          }
           return (
             <div key={c.id} className="card" onClick={() => openChecklist(c)}>
-              <span className={`badge ${p.pct >= 100 ? 'b-done' : p.pct > 0 ? 'b-prog' : 'b-todo'}`}>
-                {p.pct >= 100 ? 'READY' : p.pct > 0 ? 'IN PROGRESS' : 'TO DO'}
-              </span>
+              <span className={`badge ${badgeClass}`}>{badgeText}</span>
               <div className="cicon">{c.icon}</div>
               <h3>{c.name}</h3>
               <div className="sub">{c.items.length} items</div>
-              <div className="bar"><i style={{ width: `${p.pct}%` }} /></div>
-              <div className="meta"><span>{p.done}/{p.total} required</span><span>{p.pct}%</span></div>
+              <div className="bar"><i style={{ width: `${pct}%` }} /></div>
+              <div className="meta"><span>{already ? `${st!.completionPct}%` : `${p.done}/${p.total} required`}</span><span>{pct}%</span></div>
             </div>
           );
         })}
