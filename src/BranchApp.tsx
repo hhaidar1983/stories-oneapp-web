@@ -40,6 +40,17 @@ type Values = Record<string, Value>;
 // Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
 const today = () => new Date().toLocaleDateString('en-CA');
 
+// Statuses that mean a checklist has actually been sent to head office and is
+// done from the branch's side. 'in_progress' is NOT one of these — someone
+// merely opening (or half-filling) a checklist creates an in_progress row,
+// and that must never be mistaken for "already submitted". Checking only
+// `status !== 'returned'` (an earlier version of this code) wrongly caught
+// 'in_progress' too, which locked people out of their own unfinished checklist.
+const FINAL_STATUSES = new Set(['submitted', 'flagged', 'approved']);
+function isFinalized(s: SubmissionSummary | undefined): s is SubmissionSummary {
+  return !!s && FINAL_STATUSES.has(s.status);
+}
+
 function isFilled(item: ChecklistItem, v: Value | undefined): boolean {
   if (!v) return false;
   if (item.needsPhoto && !(v.media && v.media.some((m) => m.kind === 'photo'))) return false;
@@ -142,7 +153,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     // actually stops someone from working — it must reflect the current moment.
     const fresh = await refreshTodayStatus(branchId);
     const already = (fresh ?? todayStatus)[c.key];
-    if (already && already.status !== 'returned') {
+    if (isFinalized(already)) {
       const statusLabel =
         already.status === 'flagged'
           ? 'submitted and flagged for head-office review'
@@ -343,13 +354,13 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
           // the local draft progress — otherwise a fresh page load shows "TO DO"
           // for a checklist that was, in fact, already sent to head office.
           const st = todayStatus[c.key];
-          const already = st && st.status !== 'returned';
-          const pct = already ? st!.completionPct : p.pct;
+          const already = isFinalized(st);
+          const pct = already ? st.completionPct : p.pct;
           let badgeText = pct >= 100 ? 'READY' : pct > 0 ? 'IN PROGRESS' : 'TO DO';
           let badgeClass = pct >= 100 ? 'b-done' : pct > 0 ? 'b-prog' : 'b-todo';
           if (already) {
-            if (st!.status === 'flagged') { badgeText = 'IN REVIEW'; badgeClass = 'b-sub'; }
-            else if (st!.status === 'approved') { badgeText = 'APPROVED'; badgeClass = 'b-sub'; }
+            if (st.status === 'flagged') { badgeText = 'IN REVIEW'; badgeClass = 'b-sub'; }
+            else if (st.status === 'approved') { badgeText = 'APPROVED'; badgeClass = 'b-sub'; }
             else { badgeText = 'SUBMITTED'; badgeClass = 'b-sub'; }
           }
           return (
@@ -359,7 +370,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
               <h3>{c.name}</h3>
               <div className="sub">{c.items.length} items</div>
               <div className="bar"><i style={{ width: `${pct}%` }} /></div>
-              <div className="meta"><span>{already ? `${st!.completionPct}%` : `${p.done}/${p.total} required`}</span><span>{pct}%</span></div>
+              <div className="meta"><span>{already ? `${st.completionPct}%` : `${p.done}/${p.total} required`}</span><span>{pct}%</span></div>
             </div>
           );
         })}
