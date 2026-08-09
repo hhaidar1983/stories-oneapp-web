@@ -71,6 +71,41 @@ function progress(list: Checklist, values: Values) {
   return { done, total: req.length, pct: req.length ? Math.round((done / req.length) * 100) : 100 };
 }
 
+// Client-side draft so answers already entered survive exiting a checklist
+// (Back/Menu, backgrounding the app, a dropped connection) and coming back to
+// it. The server only stores item values on final submit — before that,
+// everything typed lives solely in this component's React state, which is
+// wiped the moment the checklist screen closes. Without this, exiting a
+// half-finished checklist and reopening it silently discarded all the work
+// and forced starting over from item one.
+type Draft = { values: Values; completedAt: Record<string, number>; sessionId?: string };
+function draftKey(branchId: string, checklistKey: string): string {
+  return `stories-oneapp:draft:${branchId}:${checklistKey}:${today()}`;
+}
+function loadDraft(branchId: string, checklistKey: string): Draft | null {
+  try {
+    const raw = localStorage.getItem(draftKey(branchId, checklistKey));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null; // corrupt/unavailable storage — fall back to starting blank
+  }
+}
+function saveDraft(branchId: string, checklistKey: string, draft: Draft) {
+  try {
+    localStorage.setItem(draftKey(branchId, checklistKey), JSON.stringify(draft));
+  } catch {
+    // Storage full or unavailable (e.g. private browsing) — worst case reverts
+    // to the old in-memory-only behavior for this session.
+  }
+}
+function clearDraft(branchId: string, checklistKey: string) {
+  try {
+    localStorage.removeItem(draftKey(branchId, checklistKey));
+  } catch {
+    // Nothing to do — a leftover draft key is harmless (see sessionId check on load).
+  }
+}
+
 export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
   const [branchId, setBranchId] = useState<string>(me?.branch?.id || DEMO_BRANCHES[0].id);
   const [checklists, setChecklists] = useState<Checklist[]>([]);
@@ -163,24 +198,48 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       alert(`${c.name} was already ${statusLabel} today (${already.completionPct}% complete). It will reopen here if head office returns it for changes.`);
       return;
     }
-    setValues({});
-    setCompletedAt({});
     setError(null);
     setOpen(c);
-    // Ask the server to open a timed session (start clock is server-side, so it
-    // can't be faked). If it fails — e.g. demo backend — fall back to a local
-    // clock so timing still works, just without server verification of the total.
+    // Ask the server to open (or resume) a timed session (start clock is
+    // server-side, so it can't be faked). Its sessionId tells us whether a
+    // saved draft belongs to THIS in-progress attempt (same session — restore
+    // it, picking up exactly where the person left off) or a different one
+    // (a fresh attempt, e.g. after being returned for correction — start blank
+    // and drop the stale draft).
     try {
       const s = await api.startSession({ branchId, templateKey: c.key, businessDate: today() });
+      const draft = loadDraft(branchId, c.key);
+      if (draft && draft.sessionId === s.sessionId) {
+        setValues(draft.values || {});
+        setCompletedAt(draft.completedAt || {});
+      } else {
+        setValues({});
+        setCompletedAt({});
+        if (draft) clearDraft(branchId, c.key);
+      }
       setSession({ sessionId: s.sessionId, startedAtMs: Date.now() });
     } catch (e: any) {
+      // Couldn't confirm the session id with the server right now — restore
+      // whatever local draft exists rather than risk wiping real work over a
+      // transient network error.
+      const draft = loadDraft(branchId, c.key);
+      setValues(draft?.values || {});
+      setCompletedAt(draft?.completedAt || {});
       // Most failures here are the same "already submitted" conflict — surface
       // it instead of silently falling back, so the person isn't left filling
       // out a checklist that can never actually be submitted.
       setError(e?.message || 'Could not start this checklist — please try again.');
-      setSession({ sessionId: '', startedAtMs: Date.now() });
+      setSession({ sessionId: draft?.sessionId || '', startedAtMs: Date.now() });
     }
   }
+
+  // Autosave the draft on every change while a checklist is open, so exiting
+  // (Back/Menu, the app being backgrounded, closing the tab) and coming back
+  // restores exactly where things were left off instead of starting over.
+  useEffect(() => {
+    if (!open || !session?.sessionId) return;
+    saveDraft(branchId, open.key, { values, completedAt, sessionId: session.sessionId });
+  }, [values, completedAt, open, session, branchId]);
 
   // Stamp the completion time the first moment an item becomes filled, so we can
   // measure the transition time between one check and the next.
@@ -261,7 +320,8 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       const mins = res.durationSec != null ? ` · took ${Math.floor(res.durationSec / 60)}m ${res.durationSec % 60}s` : '';
       const pace = res.paceFlag ? ' ⚠ flagged as too fast' : '';
       alert(`Submitted — status: ${res.status.toUpperCase()} (${res.completionPct}%)${mins}${pace}`);
-      setValues({}); // clear the draft so the card grid reflects reality
+      clearDraft(branchId, open.key); // it's finalized now — don't resurrect it on a later reopen
+      setValues({});
       setCompletedAt({});
       setSession(null);
       setOpen(null);
