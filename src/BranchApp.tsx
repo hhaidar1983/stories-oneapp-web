@@ -84,14 +84,25 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     if (me?.branch?.id) setBranchId(me.branch.id);
   }, [me]);
 
-  async function refreshTodayStatus(bId: string) {
+  // Returns the fresh map (not just the possibly-stale React state) so callers
+  // that need an up-to-the-second answer — e.g. opening a checklist — can check
+  // the server's current view of "today" instead of trusting in-memory state.
+  // That state goes stale if the app is left open across midnight (a kiosk phone
+  // that's never closed/reloaded): today() then resolves to the new business day,
+  // but without a fresh fetch the old day's "submitted" status stays cached and
+  // wrongly blocks the new day's checklist. Returns null on a network failure so
+  // the caller can fall back to whatever it already has instead of assuming
+  // nothing was ever submitted (fail toward warning, not toward silently allowing).
+  async function refreshTodayStatus(bId: string): Promise<Record<string, SubmissionSummary> | null> {
     try {
       const rows = await api.submissions(`branchId=${bId}&date=${today()}`);
       const map: Record<string, SubmissionSummary> = {};
       for (const r of rows) map[r.checklist] = r;
       setTodayStatus(map);
+      return map;
     } catch {
       // Non-critical: worst case the tiles fall back to the local draft progress.
+      return null;
     }
   }
 
@@ -113,12 +124,24 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
     };
   }, [api, branchId]);
 
+  // Belt-and-suspenders refresh so the tiles themselves self-correct at midnight
+  // (or when another device submits this branch's checklist) even if nobody taps
+  // anything — the authoritative re-check still happens in openChecklist below.
+  useEffect(() => {
+    const intervalId = setInterval(() => refreshTodayStatus(branchId), 60_000);
+    return () => clearInterval(intervalId);
+  }, [api, branchId]);
+
   async function openChecklist(c: Checklist) {
     // A checklist already submitted today (and not yet returned for correction)
     // cannot be resubmitted — the server will reject it at the final step with
     // a conflict error. Tell the person clearly up front instead of letting them
     // redo the whole checklist only to be blocked on "Submit to Head Office".
-    const already = todayStatus[c.key];
+    // Re-fetch right now rather than trusting the in-memory todayStatus: it can
+    // be stale (see refreshTodayStatus above), and this is the one check that
+    // actually stops someone from working — it must reflect the current moment.
+    const fresh = await refreshTodayStatus(branchId);
+    const already = (fresh ?? todayStatus)[c.key];
     if (already && already.status !== 'returned') {
       const statusLabel =
         already.status === 'flagged'
