@@ -410,6 +410,9 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
   if (me && MANAGER_ROLES.includes(me.role)) {
     tiles.push({ key: 'faceenroll', icon: '🧑‍💼', name: 'Staff Face Setup', sub: 'Enroll faces & set login PINs', live: true });
   }
+  if (me && me.role === 'branch_manager') {
+    tiles.push({ key: 'branch-review', icon: '✅', name: 'Review & Approve', sub: "Check and approve today's submitted checklists for your branch", live: true });
+  }
   if (me && HQ_ROLES.includes(me.role)) {
     tiles.push({ key: 'reporting', icon: '📊', name: 'Reporting', sub: 'Live submissions, escalations & executive summary', live: true });
     tiles.push({ key: 'ceo', icon: '📈', name: 'CEO Dashboard', sub: 'Live network KPIs, escalations & branch performance', url: '/reports/ceo.html' });
@@ -498,9 +501,13 @@ function Shell() {
 
   useEffect(() => {
     if (!auth.signedIn) return;
+    setError(null);
     api
       .me()
-      .then(setMe)
+      .then((m) => {
+        setMe(m);
+        setError(null);
+      })
       .catch((e) => setError(e.message));
   }, [api, auth.signedIn, auth.devUserId]);
 
@@ -553,6 +560,12 @@ function Shell() {
           <>
             {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
             <FaceEnroll api={api} />
+          </>
+        ) : openApp === 'branch-review' ? (
+          <>
+            {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
+            {error && <div className="err">{error}</div>}
+            <HeadOffice api={api} />
           </>
         ) : (
           <>
