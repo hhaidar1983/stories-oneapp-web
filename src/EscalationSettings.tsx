@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Api, EscalationConfig, Level, Person, SectionKey, TriggerKey, BranchConfigRow } from './api';
+import { Api, EscalationConfig, Level, Person, TriggerKey, BranchConfigRow } from './api';
 
-const SECTIONS: { key: SectionKey; name: string }[] = [
-  { key: 'opening', name: 'Opening' },
-  { key: 'handover', name: 'Shift Handover' },
-  { key: 'closing', name: 'Closing' },
-];
+// The core three sections keep their friendly names and order; custom
+// checklist types (from the admin catalog) follow, named from the catalog.
+const CORE_SECTION_NAMES: Record<string, string> = {
+  opening: 'Opening',
+  handover: 'Shift Handover',
+  closing: 'Closing',
+};
+const CORE_SECTION_ORDER = ['opening', 'handover', 'closing'];
 const TRIGGERS: { key: TriggerKey; name: string }[] = [
   { key: 'flagged_evidence', name: 'Flagged evidence (off-site / out-of-range / failed check)' },
   { key: 'not_submitted', name: 'Not submitted by deadline' },
@@ -54,8 +57,37 @@ export function EscalationSettings({ api }: { api: Api }) {
     api.branchConfigs().then((rows) => setBranches(rows)).catch(() => {})
   }, [api])
 
+  // Friendly names for custom checklist types (admin catalog). Non-admins may
+  // not be able to read the catalog; fall back to capitalised keys silently.
+  const [typeNames, setTypeNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    api.listChecklistTypes()
+      .then((rows) => {
+        const m: Record<string, string> = {};
+        rows.forEach((r) => { m[r.key] = r.name; });
+        setTypeNames(m);
+      })
+      .catch(() => {});
+  }, [api]);
+
   if (error) return <div className="err">{error}</div>;
   if (!cfg) return <div className="center">Loading settings…</div>;
+
+  // Sections come from the config itself (the backend includes every active
+  // checklist type), so a checklist added in Manage Checklists shows up here
+  // automatically — deadline + triggers, just like the core three.
+  const sections = Object.keys(cfg.sectionRules)
+    .sort((a, b) => {
+      const ia = CORE_SECTION_ORDER.indexOf(a);
+      const ib = CORE_SECTION_ORDER.indexOf(b);
+      const ra = ia < 0 ? CORE_SECTION_ORDER.length : ia;
+      const rb = ib < 0 ? CORE_SECTION_ORDER.length : ib;
+      return ra - rb || a.localeCompare(b);
+    })
+    .map((k) => ({
+      key: k,
+      name: typeNames[k] || CORE_SECTION_NAMES[k] || k.charAt(0).toUpperCase() + k.slice(1),
+    }));
 
   const update = (patch: Partial<EscalationConfig>) => {
     setCfg({ ...cfg, ...patch });
@@ -222,7 +254,7 @@ export function EscalationSettings({ api }: { api: Api }) {
         For each checklist section, set how severe each problem is and which level it enters the chain
         at. Turn a trigger off to ignore it for that section.
       </div>
-      {SECTIONS.map((s) => (
+      {sections.map((s) => (
         <div key={s.key} style={box}>
           <b>{s.name}</b>
           <div style={{ marginTop: 6 }}>
@@ -235,7 +267,8 @@ export function EscalationSettings({ api }: { api: Api }) {
           </div>
           <div style={{ marginTop: 8 }}>
             {TRIGGERS.map((t) => {
-              const rule = cfg.sectionRules[s.key][t.key];
+              const rule = (cfg.sectionRules[s.key] || {})[t.key];
+              if (!rule) return null;
               const setRule = (patch: Partial<typeof rule>) => {
                 const sectionRules = { ...cfg.sectionRules };
                 sectionRules[s.key] = {
