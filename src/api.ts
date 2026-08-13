@@ -192,7 +192,9 @@ export interface SectionRule {
   enabled: boolean;
 }
 export type TriggerKey = 'flagged_evidence' | 'not_submitted' | 'low_completion' | 'rushed';
-export type SectionKey = 'opening' | 'handover' | 'closing';
+// Checklist sections are dynamic: the core three plus any custom checklist
+// types created in the admin catalog. Keys come from checklist_types.
+export type SectionKey = string;
 export interface EscalationConfig {
   levels: Level[];
   climbMinutes: Record<string, number>;
