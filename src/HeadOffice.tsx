@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Api, AppNotification, ResolutionLogRow, SubmissionDetail, SubmissionSummary } from './api';
 
 // Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
-const today = () => new Date().toLocaleDateString('en-CA');
+const today = () => new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
 
 function fmtDur(sec?: number | null): string {
   if (sec == null) return '—';
@@ -160,7 +160,7 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
   const [reports, setReports] = useState<SubmissionSummary[]>([]);
   const [log, setLog] = useState<ResolutionLogRow[]>([]);
   const [filter, setFilter] = useState('all');
-  const [repDate, setRepDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [repDate, setRepDate] = useState(new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA'));
   const [err, setErr] = useState<string | null>(null);
   function loadLog() {
     api.resolutionLog().then((r) => setLog(Array.isArray(r) ? r : [])).catch((e) => setErr(e.message));
