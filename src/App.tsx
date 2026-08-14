@@ -20,6 +20,7 @@ import { ChecklistEditor } from './ChecklistEditor';
 import { ManageChecklists } from './ManageChecklists';
 import { Login } from './Login';
 import { FaceEnroll } from './FaceEnroll';
+import { NotificationBell } from './NotificationBell';
 
 // Roles allowed to edit escalation settings (everyone HQ can see the board).
 const SETTINGS_ROLES = ['admin', 'head_office'];
@@ -522,6 +523,7 @@ function Shell() {
           </div>
         </div>
         <div className="spacer" />
+        {auth.signedIn && me && <NotificationBell api={api} role={me.role} />}
         <div className="authbox">
           {auth.mode === 'demo' && auth.devMode ? (
             <select value={auth.devUserId} onChange={(e) => auth.setDevUserId(e.target.value)}>
