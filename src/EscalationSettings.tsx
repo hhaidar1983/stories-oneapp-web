@@ -43,8 +43,10 @@ export function EscalationSettings({ api }: { api: Api }) {
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState<string | null>(null);
   const [testLevel, setTestLevel] = useState(1)
+  const [testBranch, setTestBranch] = useState('')
   const [branch, setBranch] = useState('')
   const [branches, setBranches] = useState<BranchConfigRow[]>([]);
+  const [activeBranches, setActiveBranches] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     api
@@ -55,6 +57,13 @@ export function EscalationSettings({ api }: { api: Api }) {
 
   useEffect(() => {
     api.branchConfigs().then((rows) => setBranches(rows)).catch(() => {})
+  }, [api])
+
+  // Active (real) branches for the test panel - these are the UUID branches that
+  // escalations actually fire on, so a test targets the same branch a real alert
+  // would. Falls back silently to the backend's default branch if unavailable.
+  useEffect(() => {
+    api.activeBranches().then((rows) => setActiveBranches(rows)).catch(() => {})
   }, [api])
 
   // Friendly names for custom checklist types (admin catalog). Non-admins may
@@ -139,7 +148,7 @@ export function EscalationSettings({ api }: { api: Api }) {
     setTesting(true);
     setTestMsg(null);
     try {
-      const r = await api.testEscalation({ level: testLevel });
+      const r = await api.testEscalation({ level: testLevel, branchId: testBranch || undefined });
       const who = r.recipients.length
         ? r.recipients.map((p) => p.name || p.email).filter(Boolean).join(', ')
         : 'no one is assigned at this level yet';
@@ -347,7 +356,8 @@ export function EscalationSettings({ api }: { api: Api }) {
       <div style={box}>
         <div style={{ fontSize: 12.5, opacity: 0.7, marginBottom: 8 }}>
           Fire a harmless test alert to check delivery. It routes exactly like a real one — Level 1 to
-          the branch's own manager, Level 2 to its area manager.
+          the branch's own manager, Level 2 to its area manager. Pick the branch to test that branch's
+          own people.
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13 }}>Send to</span>
@@ -355,6 +365,15 @@ export function EscalationSettings({ api }: { api: Api }) {
             {cfg.levels.map((lv) => (
               <option key={lv.level} value={lv.level}>
                 L{lv.level} · {lv.title}
+              </option>
+            ))}
+          </select>
+          <span style={{ fontSize: 13 }}>at</span>
+          <select style={inp} value={testBranch} onChange={(e) => setTestBranch(e.target.value)}>
+            <option value="">First active branch (default)</option>
+            {activeBranches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
               </option>
             ))}
           </select>
