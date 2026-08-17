@@ -4,7 +4,7 @@ import { Api, ExecConfig, ExecSummaryData, Me, Recipient } from './api';
 const emptyRecipient = (): Recipient => ({ name: '', email: '', whatsapp: '' });
 
 export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
-  const today = new Date().toLocaleDateString('en-CA');
+  const today = new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
   const [date, setDate] = useState(today);
   const [sum, setSum] = useState<ExecSummaryData | null>(null);
   const [cfg, setCfg] = useState<ExecConfig | null>(null);

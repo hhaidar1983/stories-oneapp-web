@@ -38,7 +38,7 @@ type Value = { valueCheck?: 'pass' | 'fail'; valueNumber?: number; valueText?: s
 type Values = Record<string, Value>;
 
 // Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
-const today = () => new Date().toLocaleDateString('en-CA');
+const today = () => new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
 
 // Statuses that mean a checklist has actually been sent to head office and is
 // done from the branch's side. 'in_progress' is NOT one of these — someone
