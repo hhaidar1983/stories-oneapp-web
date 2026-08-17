@@ -302,6 +302,9 @@ export function createApi(base: string, authHeaders: () => Promise<Record<string
 
   return {
     branchConfigs: () => req<BranchConfigRow[]>('/branch-config'),
+    // Active (canonical) branches — the records staff/submissions actually live
+    // on, for the People branch picker. NOT the seed/S-code branch-config rows.
+    activeBranches: () => req<{ id: string; name: string }[]>('/people/branches'),
     updateBranchConfig: (id: string, patch: Partial<BranchConfigRow>) =>
       req<BranchConfigRow>('/branch-config/' + id, { method: 'PATCH', body: JSON.stringify(patch) }),
     people: () => req<PersonRow[]>('/people'),
