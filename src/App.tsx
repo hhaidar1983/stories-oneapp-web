@@ -169,7 +169,7 @@ const roleLabel = (v: string) => (PERSON_ROLES.find((r) => r.v === v) || { l: v 
 
 function People({ api }: { api: ReturnType<typeof createApi> }) {
   const [rows, setRows] = useState<PersonRow[] | null>(null);
-  const [branches, setBranches] = useState<BranchConfigRow[]>([]);
+  const [branches, setBranches] = useState<{ id: string; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<PersonRow | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -179,7 +179,7 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
 
   useEffect(() => {
     api.people().then(setRows).catch((e: any) => setError(e.message));
-    api.branchConfigs().then(setBranches).catch(() => {});
+    api.activeBranches().then(setBranches).catch(() => {});
   }, [api]);
 
   if (error) return <div className="err">{error}</div>;
@@ -252,7 +252,7 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
                 <div style={{ flex: 1 }}><span style={bsLbl}>Branch</span>
                   <select value={draft.branch_id || ''} onChange={(e) => patch({ branch_id: e.target.value || null })} style={bsInp}>
                     <option value="">— none —</option>
-                    {branches.map((b) => <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>)}
+                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
               </div>
