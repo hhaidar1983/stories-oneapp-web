@@ -169,7 +169,7 @@ export function EscalationSettings({ api }: { api: Api }) {
         <label style={lbl}>Branch scope</label>
         <select style={inp} value={branch} onChange={(e) => setBranch(e.target.value)}>
           <option value="">Company default (all branches)</option>
-          {branches.map((b) => (
+          {branches.filter((b) => b.active).map((b) => (
             <option key={b.branch_id} value={b.branch_id}>{b.branch_name || b.branch_id}</option>
           ))}
         </select>
