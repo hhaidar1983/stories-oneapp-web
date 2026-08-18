@@ -304,6 +304,23 @@ function ReviewModal({ api, detail, onClose, onDone }: {
                     })}
                   </div>
                 </div>
+                {(i.media ?? []).some((m) => safeHttps(m.viewUrl)) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(84px,1fr))', gap: 6, marginTop: 8 }}>
+                    {(i.media ?? []).map((m) => {
+                      const href = safeHttps(m.viewUrl);
+                      if (!href) return null;
+                      const isVideo = (m.mime || '').indexOf('video/') === 0 || m.kind === 'video';
+                      return (
+                        <a key={m.id} href={href} target="_blank" rel="noreferrer" style={{ position: 'relative', display: 'block', borderRadius: 8, overflow: 'hidden', background: 'rgba(255,255,255,0.06)', aspectRatio: '1 / 1' }}>
+                          {isVideo
+                            ? <video src={href} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : <img loading="lazy" src={href} alt="evidence" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                          {m.geoFlag && <span style={{ position: 'absolute', left: 3, bottom: 3, background: 'var(--danger)', color: '#fff', fontSize: 9, padding: '1px 4px', borderRadius: 3 }}>off-site</span>}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
                 <div className="rvact">
                   <button className={!flags[i.id] ? 'sel-ok' : ''} onClick={() => setFlags((f) => ({ ...f, [i.id]: false }))}>OK</button>
                   <button className={flags[i.id] ? 'sel-flag' : ''} onClick={() => setFlags((f) => ({ ...f, [i.id]: true }))}>Flag</button>
