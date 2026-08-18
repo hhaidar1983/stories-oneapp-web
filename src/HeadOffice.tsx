@@ -59,7 +59,8 @@ export function HeadOffice({ api }: { api: Api }) {
                 <span style={{ fontSize: 18 }}>⚑</span>
                 <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default', minWidth: 0 }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
                   <div className="title">{n.title}</div>
-                  <div className="body" style={{ overflowWrap: 'anywhere' }}>{n.body}</div>
+                  <div className="body" style={{ overflowWrap: 'anywhere' }}>{(n.body || '').split('View results and media:')[0].split('Daily report:')[0].split('https://')[0].trim()}</div>
+                  {n.submissionId && <div style={{ marginTop: 4, color: '#005844', fontWeight: 700, fontSize: 13 }}>Open checklist →</div>}
                 </div>
                 <span className="time">
                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
