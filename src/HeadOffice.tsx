@@ -4,6 +4,23 @@ import { Api, AppNotification, ResolutionLogRow, SubmissionDetail, SubmissionSum
 // Local calendar date (branch timezone), not UTC — 'en-CA' formats as YYYY-MM-DD.
 const today = () => new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtNiceDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return iso || '';
+  return parseInt(m[3], 10) + ' ' + MONTHS[parseInt(m[2], 10) - 1] + ' ' + m[1];
+}
+function addDays(iso: string, n: number): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return iso;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  d.setDate(d.getDate() + n);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const da = String(d.getDate()).padStart(2, '0');
+  return y + '-' + mo + '-' + da;
+}
+
 function fmtDur(sec?: number | null): string {
   if (sec == null) return '—';
   const m = Math.floor(sec / 60);
@@ -174,8 +191,11 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
   return (
     <div style={{ marginTop: 26 }}>
       <div className="sectionlabel">Operations — reports on demand</div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-        <input type="date" value={repDate} onChange={(e) => { setRepDate(e.target.value); loadReports(e.target.value); }} />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0', flexWrap: 'wrap' }}>
+        <button onClick={() => { const d = addDays(repDate, -1); setRepDate(d); loadReports(d); }} aria-label="Previous day">◀</button>
+        <input type="date" lang="en-GB" value={repDate} onChange={(e) => { setRepDate(e.target.value); loadReports(e.target.value); }} />
+        <button onClick={() => { const d = addDays(repDate, 1); setRepDate(d); loadReports(d); }} aria-label="Next day">▶</button>
+        <span style={{ fontWeight: 700, minWidth: 118 }}>{fmtNiceDate(repDate)}</span>
         <button onClick={() => loadReports(repDate)}>Load day</button>
       </div>
       {err ? <div className="err">{err}</div> : null}
