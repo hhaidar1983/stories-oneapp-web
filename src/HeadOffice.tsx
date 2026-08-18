@@ -57,9 +57,9 @@ export function HeadOffice({ api }: { api: Api }) {
             {notifs.map((n) => (
               <div className="alert" key={n.id}>
                 <span style={{ fontSize: 18 }}>⚑</span>
-                <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default' }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
+                <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default', minWidth: 0 }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
                   <div className="title">{n.title}</div>
-                  <div className="body">{n.body}</div>
+                  <div className="body" style={{ overflowWrap: 'anywhere' }}>{n.body}</div>
                 </div>
                 <span className="time">
                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
