@@ -14,6 +14,7 @@ const TRIGGERS: { key: TriggerKey; name: string }[] = [
   { key: 'not_submitted', name: 'Not submitted by deadline' },
   { key: 'low_completion', name: 'Low completion' },
   { key: 'rushed', name: 'Rushed / too fast' },
+  { key: 'completed', name: 'Checklist completed (review)' },
 ];
 const SEVERITIES = ['critical', 'high', 'medium'] as const;
 const levelsFrom = (start: number, max: number): number[] => { const out: number[] = []; for (let l = Math.max(1, start || 1); l <= max; l++) out.push(l); return out; };
