@@ -191,7 +191,7 @@ export interface SectionRule {
   levels?: number[];
   enabled: boolean;
 }
-export type TriggerKey = 'flagged_evidence' | 'not_submitted' | 'low_completion' | 'rushed';
+export type TriggerKey = 'flagged_evidence' | 'not_submitted' | 'low_completion' | 'rushed' | 'completed';
 // Checklist sections are dynamic: the core three plus any custom checklist
 // types created in the admin catalog. Keys come from checklist_types.
 export type SectionKey = string;
