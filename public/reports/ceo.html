@@ -107,12 +107,14 @@
     var res = await Promise.all([
       jget('/exec-summary?date='+date),
       jget('/escalations').catch(function(){return [];}),
-      jget('/people').catch(function(){return [];})
+      jget('/people/branches').catch(function(){return [];})
     ]);
-    var sum=res[0], escR=res[1], pplR=res[2];
-    var people = Array.isArray(pplR)?pplR:(pplR.items||pplR.data||[]);
-    var totalBranches = 0; var seen={};
-    people.forEach(function(p){ var b=p.branch_id||p.branchId; if(b&&!seen[b]){seen[b]=1;totalBranches++;} });
+    var sum=res[0], escR=res[1], brR=res[2];
+    // Count the real store list. This used to count the distinct branches that
+    // appeared on the staff roster, so a store with nobody assigned to it yet
+    // dropped out of the total entirely - "16 / 24" when there are 25 stores.
+    var brList = Array.isArray(brR)?brR:(brR.items||brR.data||[]);
+    var totalBranches = brList.length;
     var escArr = Array.isArray(escR)?escR:(escR.items||escR.data||[]);
     render(sum, escArr, totalBranches||25);
   }
@@ -128,7 +130,7 @@
     document.getElementById('hero').innerHTML =
       hcard('g', pct(t.avgCompletion), 'Network completion', 'across reporting branches') +
       hcard('g', (t.branchesReporting||0)+' / '+totalBranches, 'Branches reporting', 'submitted today') +
-      hcard(open.length?'b':'g', open.length, 'Open escalations', hoOpen+' at Head Office') +
+      hcard(open.length?'b':'g', open.length, 'Open escalations', 'all days &middot; '+hoOpen+' at Head Office') +
       hcard((t.flaggedItems||0)?'w':'g', (t.flaggedItems||0), 'Flagged items today', 'Pending '+(t.pending||0)+' / Fixed '+(t.fixed||0)+' / Esc '+(t.escalated||0));
 
     // funnel
@@ -137,7 +139,7 @@
     }).join('');
 
     // branches
-    var brs = (sum.branches||[]).slice().sort(function(a,b){return (b.flagged||0)-(a.flagged||0) || (a.completion||0)-(b.completion||0);});
+    var brs = (sum.branches||[]).slice().sort(function(a,b){return (b.flagged||0)-(a.flagged||0) || (a.completionPct||0)-(b.completionPct||0);});
     var bhtml;
     if(!brs.length){ bhtml = '<div class="feed"><div class="empty">No branches have reported yet for this day.</div></div>'; }
     else {
@@ -145,7 +147,7 @@
         brs.map(function(b){
           var st = (b.status||'').toLowerCase();
           var pill = st.indexOf('flag')>=0?'<span class="pill warn">Flagged</span>':(st==='approved'||st==='submitted'?'<span class="pill ok">'+esc(b.status)+'</span>':'<span class="pill mut">'+esc(b.status||'&mdash;')+'</span>');
-          return '<tr><td class="b">'+esc(b.branch)+'</td><td>'+esc(b.checklist)+'</td><td>'+pill+'</td><td><span class="bar"><i style="width:'+(b.completion||0)+'%"></i></span> '+pct(b.completion)+'</td><td>'+(b.flagged||0)+'</td></tr>';
+          return '<tr><td class="b">'+esc(b.branch)+'</td><td>'+esc(b.checklist)+'</td><td>'+pill+'</td><td><span class="bar"><i style="width:'+(b.completionPct||0)+'%"></i></span> '+pct(b.completionPct)+'</td><td>'+(b.flagged||0)+'</td></tr>';
         }).join('')+'</tbody></table>';
     }
     document.getElementById('branches').innerHTML = bhtml;

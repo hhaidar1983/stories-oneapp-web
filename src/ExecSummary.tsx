@@ -65,7 +65,7 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
           <Stat label="Pending" value={t.pending} />
           <Stat label="Fixed" value={t.fixed} />
           <Stat label="Escalated" value={t.escalated} />
-          <Stat label="Open escalations" value={t.openEscalations} />
+          <Stat label="Open escalations (this day)" value={t.openEscalations} />
         </div>
       ) : null}
       {sum && sum.branches.length ? (
