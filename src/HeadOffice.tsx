@@ -40,6 +40,23 @@ function fmtDwell(ms: number | null): string {
 
 // An alert’s severity, as a class on the row. Good news, something to look at
 // and a real escalation should not all shout in the same colour.
+// Stored statuses (in_progress, submitted) read as machine output when printed
+// straight through .toUpperCase(). Same treatment as the executive summary.
+const STATUS_TEXT: Record<string, string> = {
+  draft: 'Draft',
+  in_progress: 'In progress',
+  submitted: 'Submitted',
+  flagged: 'Flagged',
+  approved: 'Approved',
+  returned: 'Returned',
+};
+function statusText(s: string): string {
+  const k = String(s || '').toLowerCase().trim();
+  if (!k) return String.fromCharCode(8212);
+  if (STATUS_TEXT[k]) return STATUS_TEXT[k];
+  return k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+}
+
 function alertKind(kind: string): string {
   if (kind === 'escalation') return 'k-escalation';
   if (kind === 'submission_flagged') return 'k-flagged';
@@ -126,14 +143,14 @@ export function HeadOffice({ api }: { api: Api }) {
             return (
               <tr key={r.id} className={clickable ? 'rowbtn' : ''}
                 onClick={() => clickable && api.submission(r.id).then(setDetail).catch((e) => setError(e.message))}>
-                <td><b>{r.branch.name}</b></td>
-                <td>{r.name}</td>
-                <td>{r.completionPct}%</td>
-                <td className={r.paceFlag ? 'pace-bad' : ''}>
+                <td data-label="Branch"><b>{r.branch.name}</b></td>
+                <td data-label="Checklist">{r.name}</td>
+                <td data-label="Completion">{r.completionPct}%</td>
+                <td data-label="Duration" className={r.paceFlag ? 'pace-bad' : ''}>
                   {fmtDur(r.durationSec)}{r.paceFlag ? ' ⚠' : ''}
                 </td>
-                <td><span className={`st ${STATUS_CLASS[r.status] || 'st-part'}`}>{r.status.toUpperCase()}</span></td>
-                <td>{r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                <td data-label="Status"><span className={`st ${STATUS_CLASS[r.status] || 'st-part'}`}>{statusText(r.status)}</span></td>
+                <td data-label="Time">{r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
               </tr>
             );
           })}
@@ -226,11 +243,11 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
           {reports.length === 0 ? <tr><td colSpan={5} style={{ color: 'var(--muted)' }}>No reports for this day.</td></tr> : null}
           {reports.map((r) => (
             <tr key={r.id} className="rowbtn" onClick={() => onOpen(r.id)}>
-              <td><b>{r.branch.name}</b></td>
-              <td>{r.name}</td>
-              <td>{r.completionPct}%</td>
-              <td>{r.status.toUpperCase()}</td>
-              <td>{r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+              <td data-label="Branch"><b>{r.branch.name}</b></td>
+              <td data-label="Checklist">{r.name}</td>
+              <td data-label="Completion">{r.completionPct}%</td>
+              <td data-label="Status">{statusText(r.status)}</td>
+              <td data-label="Time">{r.submittedAt ? new Date(r.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -251,12 +268,12 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
             const nice = state === 'fixed' ? 'Fixed' : state === 'escalated' ? 'Escalated' : 'Pending';
             return (
               <tr key={l.id} className="rowbtn" onClick={() => onOpen(l.submissionId)}>
-                <td>{new Date(l.businessDate).toLocaleDateString('en-CA')}</td>
-                <td><b>{l.branch}</b></td>
-                <td>{l.label}</td>
-                <td style={{ color, fontWeight: 600 }}>{nice}</td>
-                <td>{l.resolvedByName || '-'}</td>
-                <td style={{ maxWidth: 240, whiteSpace: 'normal' }}>{l.resolutionNote || '-'}</td>
+                <td data-label="Date">{new Date(l.businessDate).toLocaleDateString('en-CA')}</td>
+                <td data-label="Branch"><b>{l.branch}</b></td>
+                <td data-label="Task">{l.label}</td>
+                <td data-label="State" style={{ color, fontWeight: 600 }}>{nice}</td>
+                <td data-label="By">{l.resolvedByName || '—'}</td>
+                <td data-label="Remarks" style={{ maxWidth: 240, whiteSpace: 'normal' }}>{l.resolutionNote || '—'}</td>
               </tr>
             );
           })}

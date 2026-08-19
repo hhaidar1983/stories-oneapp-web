@@ -319,7 +319,10 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
       });
       const mins = res.durationSec != null ? ` · took ${Math.floor(res.durationSec / 60)}m ${res.durationSec % 60}s` : '';
       const pace = res.paceFlag ? ' ⚠ flagged as too fast' : '';
-      alert(`Submitted — status: ${res.status.toUpperCase()} (${res.completionPct}%)${mins}${pace}`);
+      // Staff see this the moment they finish a checklist. It used to read
+      // "status: IN_PROGRESS" - a stored value, shouted.
+      const nice = String(res.status || "").toLowerCase().replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+      alert(`Submitted — ${nice} (${res.completionPct}%)${mins}${pace}`);
       clearDraft(branchId, open.key); // it's finalized now — don't resurrect it on a later reopen
       setValues({});
       setCompletedAt({});
