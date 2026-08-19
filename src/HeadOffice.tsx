@@ -98,7 +98,7 @@ export function HeadOffice({ api }: { api: Api }) {
                 <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default', minWidth: 0 }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
                   <div className="title">{n.title}</div>
                   <div className="body" style={{ overflowWrap: 'anywhere' }}>{(n.body || '').split('View results and media:')[0].split('Daily report:')[0].split('https://')[0].trim()}</div>
-                  {n.submissionId && <div style={{ marginTop: 4, color: '#005844', fontWeight: 700, fontSize: 13 }}>Open checklist →</div>}
+                  {n.submissionId && <div style={{ marginTop: 4, color: 'var(--green)', fontWeight: 700, fontSize: 13 }}>Open checklist →</div>}
                 </div>
                 <span className="time">
                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -169,25 +169,25 @@ function ItemResolve({ api, submissionId, item }: { api: Api; submissionId: stri
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   }
   if (res.r === 'fixed') {
-    return <div className="rvresolved" style={{ marginTop: 6, color: '#2fbd74', fontWeight: 600 }}>Successfully fixed{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+    return <div className="rvresolved" style={{ marginTop: 6, color: 'var(--green)', fontWeight: 600 }}>Successfully fixed{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
   }
   if (res.r === 'escalated') {
-    return <div className="rvresolved" style={{ marginTop: 6, color: '#e8a33d', fontWeight: 600 }}>Escalated to Ops{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+    return <div className="rvresolved" style={{ marginTop: 6, color: 'var(--warn)', fontWeight: 600 }}>Escalated to Ops{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
   }
   return (
     <div className="rvresolve" style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
       {err ? <div className="err" style={{ margin: '4px 0' }}>{err}</div> : null}
       {mode !== 'escalate' ? (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ background: '#1f7a4d', color: '#fff' }} disabled={busy} onClick={() => act('fixed')}>Mark fixed</button>
-          <button style={{ background: '#b5601a', color: '#fff' }} disabled={busy} onClick={() => setMode('escalate')}>Escalate to Ops</button>
+          <button style={{ background: 'var(--green)', color: '#fff' }} disabled={busy} onClick={() => act('fixed')}>Mark fixed</button>
+          <button style={{ background: 'var(--warn-d)', color: '#fff' }} disabled={busy} onClick={() => setMode('escalate')}>Escalate to Ops</button>
         </div>
       ) : (
         <div>
           <textarea placeholder="Your remarks for the Operations Manager" value={note} onChange={(e) => setNote(e.target.value)} rows={2} style={{ width: '100%', boxSizing: 'border-box' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
             <button disabled={busy} onClick={() => setMode('')}>Cancel</button>
-            <button style={{ background: '#b5601a', color: '#fff' }} disabled={busy} onClick={() => act('escalated')}>Send to Ops</button>
+            <button style={{ background: 'var(--warn-d)', color: '#fff' }} disabled={busy} onClick={() => act('escalated')}>Send to Ops</button>
           </div>
         </div>
       )}
@@ -238,7 +238,7 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
       <div className="sectionlabel" style={{ marginTop: 22 }}>Task log — pending and resolved</div>
       <div style={{ display: 'flex', gap: 6, margin: '8px 0', flexWrap: 'wrap' }}>
         {['all', 'pending', 'fixed', 'escalated'].map((f) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? '#2a6f97' : undefined, color: filter === f ? '#fff' : undefined }}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
+          <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? 'var(--green)' : undefined, color: filter === f ? '#fff' : undefined }}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
         ))}
       </div>
       <table>
@@ -247,7 +247,7 @@ function OpsLog({ api, onOpen }: { api: Api; onOpen: (id: string) => void }) {
           {shown.length === 0 ? <tr><td colSpan={6} style={{ color: 'var(--muted)' }}>No flagged tasks yet.</td></tr> : null}
           {shown.map((l) => {
             const state = l.resolution || 'pending';
-            const color = state === 'fixed' ? '#2fbd74' : state === 'escalated' ? '#e8a33d' : '#cc9966';
+            const color = state === 'fixed' ? 'var(--green)' : state === 'escalated' ? 'var(--warn)' : 'var(--muted)';
             const nice = state === 'fixed' ? 'Fixed' : state === 'escalated' ? 'Escalated' : 'Pending';
             return (
               <tr key={l.id} className="rowbtn" onClick={() => onOpen(l.submissionId)}>
@@ -305,7 +305,7 @@ function ReviewModal({ api, detail, onClose, onDone }: {
             <h2>{detail.name}</h2>
             <div style={{ fontSize: 12.5, opacity: 0.75 }}>{detail.branch.name}</div>
           </div>
-          <button style={{ color: '#eaf3ee', fontSize: 22 }} onClick={onClose}>✕</button>
+          <button style={{ color: 'var(--on-green)', fontSize: 22 }} onClick={onClose}>✕</button>
         </div>
         <div className="mbody">
           {error && <div className="err">{error}</div>}

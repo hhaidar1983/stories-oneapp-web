@@ -4,16 +4,16 @@ import { Api, BranchChecklistRow, BranchConfigRow, ChecklistTypeRow } from './ap
 // ── Shared styles ────────────────────────────────────────────────────────────
 
 const box: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
   borderRadius: 10,
   padding: 14,
   marginBottom: 14,
 };
 const inp: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
-  color: '#14201A',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
+  color: 'var(--ink)',
   borderRadius: 6,
   padding: '6px 8px',
   fontSize: 13,
@@ -22,12 +22,12 @@ const inp: React.CSSProperties = {
 };
 const lbl: React.CSSProperties = {
   fontSize: 11,
-  color: '#6B7D73',
+  color: 'var(--muted)',
   display: 'block',
   marginBottom: 4,
 };
 const btn: React.CSSProperties = {
-  background: '#086C42',
+  background: 'var(--green)',
   color: '#fff',
   border: 'none',
   borderRadius: 6,
@@ -37,8 +37,8 @@ const btn: React.CSSProperties = {
 };
 const btnGhost: React.CSSProperties = {
   background: '#fff',
-  color: '#086C42',
-  border: '1px solid #086C42',
+  color: 'var(--green)',
+  border: '1px solid var(--green)',
   borderRadius: 6,
   padding: '6px 10px',
   fontSize: 12,
@@ -46,8 +46,8 @@ const btnGhost: React.CSSProperties = {
 };
 const btnDanger: React.CSSProperties = {
   background: '#fff',
-  color: '#B4442E',
-  border: '1px solid #E4C9C2',
+  color: 'var(--danger)',
+  border: '1px solid var(--danger-line)',
   borderRadius: 6,
   padding: '6px 10px',
   fontSize: 12,
@@ -116,28 +116,28 @@ function CatalogPanel({ api }: { api: Api }) {
 
   return (
     <div style={box}>
-      <strong style={{ fontSize: 14, color: '#14201A' }}>Checklist catalog</strong>
-      <div style={{ fontSize: 12, color: '#6B7D73', marginTop: 4, marginBottom: 12 }}>
+      <strong style={{ fontSize: 14, color: 'var(--ink)' }}>Checklist catalog</strong>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, marginBottom: 12 }}>
         The global set of checklist types. Inactive types are hidden from branches but their history is preserved.
       </div>
       {error && (
-        <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E', marginBottom: 10 }}>{error}</div>
+        <div style={{ ...box, borderColor: 'var(--danger-line)', color: 'var(--danger)', marginBottom: 10 }}>{error}</div>
       )}
-      {!types && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loading…</div>}
+      {!types && !error && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Loading…</div>}
       {types && types.map((t) => (
-        <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #EEF1EF' }}>
+        <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
           <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{t.icon || '📋'}</span>
           <span style={{ flex: 1 }}>
             <span style={{ fontWeight: 600, fontSize: 13 }}>{t.name}</span>
-            <span style={{ marginLeft: 8, fontSize: 11, color: '#9AA8A0' }}>{t.key}</span>
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--muted)' }}>{t.key}</span>
           </span>
           <span
             style={{
               fontSize: 11,
               padding: '2px 8px',
               borderRadius: 10,
-              background: t.active ? '#E7F1EC' : '#EEF1EF',
-              color: t.active ? '#086C42' : '#6B7D73',
+              background: t.active ? 'var(--green-l)' : 'var(--line)',
+              color: t.active ? 'var(--green)' : 'var(--muted)',
               cursor: 'pointer',
             }}
             onClick={() => !saving && toggleActive(t.key, !t.active)}
@@ -226,8 +226,8 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
 
   return (
     <div style={box}>
-      <strong style={{ fontSize: 14, color: '#14201A' }}>Branch checklist assignments</strong>
-      <div style={{ fontSize: 12, color: '#6B7D73', marginTop: 4, marginBottom: 12 }}>
+      <strong style={{ fontSize: 14, color: 'var(--ink)' }}>Branch checklist assignments</strong>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, marginBottom: 12 }}>
         Choose which checklists run at each branch and their order. Inactive types are hidden from staff.
       </div>
       <div style={{ marginBottom: 12 }}>
@@ -239,12 +239,12 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
           ))}
         </select>
       </div>
-      {error && <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E', marginBottom: 10 }}>{error}</div>}
-      {branch && !rows && !error && <div style={{ color: '#6B7D73', fontSize: 13 }}>Loading…</div>}
+      {error && <div style={{ ...box, borderColor: 'var(--danger-line)', color: 'var(--danger)', marginBottom: 10 }}>{error}</div>}
+      {branch && !rows && !error && <div style={{ color: 'var(--muted)', fontSize: 13 }}>Loading…</div>}
       {rows && rows.map((r, idx) => (
         <div key={r.typeKey} style={{
           display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0',
-          borderBottom: '1px solid #EEF1EF',
+          borderBottom: '1px solid var(--line)',
           opacity: r.active ? 1 : 0.5,
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -256,8 +256,8 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
           <span
             style={{
               fontSize: 11, padding: '2px 8px', borderRadius: 10, cursor: 'pointer',
-              background: r.active ? '#E7F1EC' : '#EEF1EF',
-              color: r.active ? '#086C42' : '#6B7D73',
+              background: r.active ? 'var(--green-l)' : 'var(--line)',
+              color: r.active ? 'var(--green)' : 'var(--muted)',
             }}
             onClick={() => toggleRow(idx)}
             title="Toggle active/inactive for this branch"
@@ -269,7 +269,7 @@ function AssignmentsPanel({ api, branches }: { api: Api; branches: BranchConfigR
       {rows && (
         <div style={{ display: 'flex', gap: 10, marginTop: 12, alignItems: 'center' }}>
           <button style={btn} disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save assignments'}</button>
-          {saved && <span style={{ fontSize: 12, color: '#086C42' }}>Saved ✓</span>}
+          {saved && <span style={{ fontSize: 12, color: 'var(--green)' }}>Saved ✓</span>}
         </div>
       )}
     </div>
@@ -313,11 +313,11 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
 
   return (
     <div style={box}>
-      <strong style={{ fontSize: 14, color: '#14201A' }}>Clone checklists to other branches</strong>
-      <div style={{ fontSize: 12, color: '#6B7D73', marginTop: 4, marginBottom: 12 }}>
+      <strong style={{ fontSize: 14, color: 'var(--ink)' }}>Clone checklists to other branches</strong>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, marginBottom: 12 }}>
         Copy a branch's checklist setup (which types are active + their items) onto one or more other branches.
       </div>
-      {error && <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E', marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ ...box, borderColor: 'var(--danger-line)', color: 'var(--danger)', marginBottom: 10 }}>{error}</div>}
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 14 }}>
         <div style={{ flex: '1 1 180px' }}>
           <label style={lbl}>Copy FROM branch</label>
@@ -346,19 +346,19 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
       {fromBranch && (
         <>
           <label style={lbl}>Copy TO branches (select multiple)</label>
-          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #DCE8E1', borderRadius: 8, padding: 8, marginBottom: 12 }}>
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: 8, padding: 8, marginBottom: 12 }}>
             {targetBranches.length === 0 && (
-              <div style={{ color: '#9AA8A0', fontSize: 12 }}>No other branches available.</div>
+              <div style={{ color: 'var(--muted)', fontSize: 12 }}>No other branches available.</div>
             )}
             {targetBranches.map((b) => {
               const checked = toBranches.includes(b.branch_id);
               const res = result?.find((r) => r.branchId === b.branch_id);
               return (
-                <label key={b.branch_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 4px', cursor: 'pointer', borderBottom: '1px solid #EEF1EF' }}>
+                <label key={b.branch_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 4px', cursor: 'pointer', borderBottom: '1px solid var(--line)' }}>
                   <input type="checkbox" checked={checked} onChange={() => toggleTarget(b.branch_id)} />
                   <span style={{ flex: 1, fontSize: 13 }}>{b.branch_name || b.branch_id}</span>
                   {res && (
-                    <span style={{ fontSize: 11, color: res.ok ? '#086C42' : '#B4442E' }}>
+                    <span style={{ fontSize: 11, color: res.ok ? 'var(--green)' : 'var(--danger)' }}>
                       {res.ok ? '✓ Done' : '✗ ' + res.error}
                     </span>
                   )}
@@ -376,7 +376,7 @@ function ClonePanel({ api, branches }: { api: Api; branches: BranchConfigRow[] }
               </button>
             )}
             {result && (
-              <span style={{ fontSize: 12, color: result.every((r) => r.ok) ? '#086C42' : '#B4442E' }}>
+              <span style={{ fontSize: 12, color: result.every((r) => r.ok) ? 'var(--green)' : 'var(--danger)' }}>
                 {result.filter((r) => r.ok).length}/{result.length} succeeded
               </span>
             )}
@@ -399,7 +399,7 @@ export function ManageChecklists({ api }: { api: Api }) {
   return (
     <div>
       <div className="sectionlabel">Manage checklists</div>
-      <div style={{ fontSize: 12, color: '#6B7D73', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
         Add new checklist types, control which types each branch runs, and clone setups across branches.
       </div>
       <CatalogPanel api={api} />

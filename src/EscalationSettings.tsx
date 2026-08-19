@@ -20,17 +20,17 @@ const SEVERITIES = ['critical', 'high', 'medium'] as const;
 const levelsFrom = (start: number, max: number): number[] => { const out: number[] = []; for (let l = Math.max(1, start || 1); l <= max; l++) out.push(l); return out; };
 
 const box: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
   borderRadius: 10,
   padding: 14,
   marginBottom: 14,
 };
 const lbl: React.CSSProperties = { fontSize: 12, opacity: 0.7, display: 'block', marginBottom: 4 };
 const inp: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
-  color: '#14201A',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
+  color: 'var(--ink)',
   borderRadius: 6,
   padding: '6px 8px',
   fontSize: 13,
@@ -383,7 +383,7 @@ export function EscalationSettings({ api }: { api: Api }) {
           </button>
         </div>
         {testMsg && (
-          <div style={{ fontSize: 12.5, marginTop: 8, color: '#086C42' }}>{testMsg}</div>
+          <div style={{ fontSize: 12.5, marginTop: 8, color: 'var(--green)' }}>{testMsg}</div>
         )}
       </div>
 
@@ -391,7 +391,7 @@ export function EscalationSettings({ api }: { api: Api }) {
         <button className="primary" disabled={saving} onClick={save}>
           {saving ? 'Saving…' : 'Save settings'}
         </button>
-        {saved && <span style={{ color: '#086C42' }}>Saved ✓</span>}
+        {saved && <span style={{ color: 'var(--green)' }}>Saved ✓</span>}
       </div>
     </>
   );
