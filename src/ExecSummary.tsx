@@ -69,7 +69,7 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   const t = sum ? sum.totals : null;
   return (
     <div>
-      <div className="sectionlabel">Executive summary</div>
+      <div className="pagetitle">Executive summary</div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
         <input type="date" value={date} onChange={(e) => { setDate(e.target.value); loadSummary(e.target.value); }} />
         <button onClick={() => loadSummary(date)}>Refresh</button>

@@ -210,7 +210,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
 
   return (
     <div>
-      <div className="sectionlabel">Checklists</div>
+      <div className="pagetitle">Checklists</div>
       <div style={{ marginBottom: 14 }}>
         <label style={lbl}>Branch</label>
         <select

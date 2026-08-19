@@ -203,6 +203,25 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .card.soon:hover { transform: none; border-color: var(--line); box-shadow: var(--shadow); }
 .menuback { margin-bottom: 14px; }
 
+/* Reporting tabs. The .hqtab class was applied in the markup but never
+   defined, so the three tabs rendered as bare text with nothing to show
+   they were clickable or which one you were on. */
+.hqtabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  background: var(--green-l2); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.hqtab { font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 9px;
+  color: var(--muted); background: transparent; border: none; }
+.hqtab:hover { color: var(--green); }
+.hqtab.on { background: var(--card); color: var(--green); box-shadow: 0 1px 3px rgba(6, 42, 34, .10); }
+.hqtab:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+
+/* One heading treatment for every screen. Screens previously announced
+   themselves three different ways: a large bold title, a small uppercase
+   label, or nothing at all. */
+.pagetitle { font-size: 20px; font-weight: 800; letter-spacing: -.01em;
+  color: var(--ink); margin: 4px 0 3px; text-transform: none; }
+.pagesub { font-size: 13px; color: var(--muted); line-height: 1.5;
+  max-width: 78ch; margin: 0 0 14px; }
+
 /* --- In-app camera (live capture + GPS + burned-in watermark) --- */
 .camoverlay { position: fixed; inset: 0; z-index: 80; background: #000; display: flex; flex-direction: column; }
 .camoverlay video { flex: 1; width: 100%; height: 100%; object-fit: cover; background: #000; }
