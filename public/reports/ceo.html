@@ -99,6 +99,16 @@
   function ageOf(iso){ if(!iso) return ''; var m=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/60000)); if(m<60) return m+' min'; var h=Math.floor(m/60); return h+'h '+(m%60)+'m'; }
   function sevPill(s){ s=(s||'').toLowerCase(); if(s==='critical') return '<span class="pill bad">Critical</span>'; if(s==='high') return '<span class="pill warn">High</span>'; return '<span class="pill mut">'+esc(s||'Medium')+'</span>'; }
 
+  // Statuses are stored values (in_progress, approved). The pill used to print
+  // them raw, so one row read 'Flagged' and the next 'approved'.
+  function statusLabel(s){
+    var k=String(s||'').toLowerCase().trim();
+    var M={draft:'Draft',in_progress:'In progress',submitted:'Submitted',flagged:'Flagged',approved:'Approved',returned:'Returned'};
+    if(!k) return '\u2014';
+    if(M[k]) return M[k];
+    return k.replace(/_/g,' ').replace(/^./,function(c){return c.toUpperCase();});
+  }
+
   function localDate(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
   async function jget(p){ var r=await fetch(BASE+p,{headers:H}); if(!r.ok) throw new Error(p+' '+r.status); return r.json(); }
@@ -146,7 +156,7 @@
       bhtml = '<table><thead><tr><th>Branch</th><th>Checklist</th><th>Status</th><th>Completion</th><th>Flags</th></tr></thead><tbody>'+
         brs.map(function(b){
           var st = (b.status||'').toLowerCase();
-          var pill = st.indexOf('flag')>=0?'<span class="pill warn">Flagged</span>':(st==='approved'||st==='submitted'?'<span class="pill ok">'+esc(b.status)+'</span>':'<span class="pill mut">'+esc(b.status||'&mdash;')+'</span>');
+          var pill = st.indexOf('flag')>=0?'<span class="pill warn">'+esc(statusLabel(b.status))+'</span>':(st==='approved'||st==='submitted'?'<span class="pill ok">'+esc(statusLabel(b.status))+'</span>':'<span class="pill mut">'+esc(statusLabel(b.status))+'</span>');
           return '<tr><td class="b">'+esc(b.branch)+'</td><td>'+esc(b.checklist)+'</td><td>'+pill+'</td><td><span class="bar"><i style="width:'+(b.completionPct||0)+'%"></i></span> '+pct(b.completionPct)+'</td><td>'+(b.flagged||0)+'</td></tr>';
         }).join('')+'</tbody></table>';
     }

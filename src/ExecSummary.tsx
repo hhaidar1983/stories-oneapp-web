@@ -3,6 +3,25 @@ import { Api, ExecConfig, ExecSummaryData, Me, Recipient } from './api';
 
 const emptyRecipient = (): Recipient => ({ name: '', email: '', whatsapp: '' });
 
+// Submission statuses arrive as stored values — in_progress, submitted,
+// approved. The table used to print them straight through .toUpperCase(),
+// so a reader saw "IN_PROGRESS". Show the words instead, and tidy up any
+// status added later rather than falling back to raw text.
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  in_progress: 'In progress',
+  submitted: 'Submitted',
+  flagged: 'Flagged',
+  approved: 'Approved',
+  returned: 'Returned',
+};
+function statusLabel(s: string): string {
+  const k = String(s || '').toLowerCase().trim();
+  if (!k) return String.fromCharCode(8212);
+  if (STATUS_LABELS[k]) return STATUS_LABELS[k];
+  return k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+}
+
 export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   const today = new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
   const [date, setDate] = useState(today);
@@ -78,7 +97,7 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
               <tr key={i}>
                 <td><b>{b.branch}</b></td>
                 <td>{b.checklist}</td>
-                <td>{String(b.status).toUpperCase()}</td>
+                <td>{statusLabel(b.status)}</td>
                 <td>{b.completionPct}%</td>
                 <td>{b.flagged}</td>
                 <td>{b.pending}</td>

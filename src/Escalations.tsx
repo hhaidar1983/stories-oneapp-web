@@ -107,7 +107,8 @@ export function Escalations({ api }: { api: Api }) {
                   L{r.currentLevel} · {r.levelTitle}
                 </b>
                 <div style={{ fontSize: 12, opacity: 0.7 }}>
-                  {r.assignees.length ? r.assignees.join(', ') : 'no one assigned yet'}
+                  {r.assignees.map((a) => String(a).trim()).filter(Boolean).join(', ') ||
+                    'no one assigned yet'}
                 </div>
               </td>
               <td>{ageOf(r.createdAt)}</td>

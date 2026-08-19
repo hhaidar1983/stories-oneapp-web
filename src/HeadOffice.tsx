@@ -38,6 +38,21 @@ function fmtDwell(ms: number | null): string {
   return s ? `${m}m ${s}s` : `${m}m`;
 }
 
+// An alert’s severity, as a class on the row. Good news, something to look at
+// and a real escalation should not all shout in the same colour.
+function alertKind(kind: string): string {
+  if (kind === 'escalation') return 'k-escalation';
+  if (kind === 'submission_flagged') return 'k-flagged';
+  if (kind === 'submission_clear') return 'k-clear';
+  return 'k-digest';
+}
+function alertIcon(kind: string): string {
+  if (kind === 'escalation') return '▲';
+  if (kind === 'submission_flagged') return '⚑';
+  if (kind === 'submission_clear') return '✓';
+  return '•';
+}
+
 // Only allow https media links; never render a javascript:/data: URL into href.
 function safeHttps(url: string): string | null {
   try {
@@ -78,8 +93,8 @@ export function HeadOffice({ api }: { api: Api }) {
           <div className="sectionlabel">Alerts · {notifs.length}</div>
           <div className="alerts">
             {notifs.map((n) => (
-              <div className="alert" key={n.id}>
-                <span style={{ fontSize: 18 }}>⚑</span>
+              <div className={`alert ${alertKind(n.kind)}`} key={n.id}>
+                <span className="ic">{alertIcon(n.kind)}</span>
                 <div className="at" style={{ cursor: n.submissionId ? 'pointer' : 'default', minWidth: 0 }} onClick={() => n.submissionId && api.submission(n.submissionId).then(setDetail).catch((e) => setError(e.message))}>
                   <div className="title">{n.title}</div>
                   <div className="body" style={{ overflowWrap: 'anywhere' }}>{(n.body || '').split('View results and media:')[0].split('Daily report:')[0].split('https://')[0].trim()}</div>
