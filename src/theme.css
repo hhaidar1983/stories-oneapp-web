@@ -40,7 +40,7 @@
   --danger-l: #fdeceb;
   --danger-line: #f0cfc9;
 
-  --shadow: 0 8px 30px rgba(14, 36, 26, 0.09);
+  --shadow: 0 8px 30px rgba(6, 42, 34, 0.09);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -127,7 +127,7 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .st-part { background: var(--warn-l); color: var(--warn); } .st-approved { background: var(--green); color: #fff; }
 .st-returned { background: var(--danger-line); color: var(--danger); }
 
-.overlay { position: fixed; inset: 0; background: rgba(14,36,26,.5); z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow: auto; }
+.overlay { position: fixed; inset: 0; background: rgba(6, 42, 34,.5); z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow: auto; }
 .modal { background: var(--bg); width: 100%; max-width: 640px; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
 .modal .mh { background: var(--green-dd); color: var(--on-green); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
 .mbody { padding: 18px 20px; max-height: 60vh; overflow: auto; }
@@ -210,7 +210,7 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
   gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 16px 12px; color: #fff; font-size: 13px; font-weight: 600;
   background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0)); }
 .camgeo { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 20px; background: rgba(255,255,255,.18); white-space: nowrap; }
-.camgeo.ok { background: rgba(11,122,67,.9); }
+.camgeo.ok { background: rgba(0, 88, 68,.9); }
 .camgeo.bad { background: rgba(208,59,59,.9); }
 .camhint { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; color: var(--on-green); font-size: 12px; opacity: .85; padding: 0 20px; }
 .cambar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between;
@@ -302,7 +302,7 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .bigbtn { display: flex; align-items: center; gap: 12px; justify-content: center;
   padding: 18px 20px; border-radius: 14px; border: 1px solid var(--line-2); background: #fff;
   font-size: 17px; font-weight: 600; color: var(--green-dd); cursor: pointer; transition: transform .06s, box-shadow .15s; }
-.bigbtn:hover { box-shadow: 0 4px 16px rgba(18,53,36,.12); }
+.bigbtn:hover { box-shadow: 0 4px 16px rgba(6, 42, 34,.12); }
 .bigbtn:active { transform: translateY(1px); }
 .bigbtn.primary { background: var(--green-dd); color: var(--on-green); border-color: var(--green-dd); margin-left: 0; width: 100%; }
 .bigbtn.subtle { background: var(--green-l2); color: #365; font-weight: 500; }
@@ -341,7 +341,7 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .search { width: 100%; box-sizing: border-box; padding: 12px 14px; margin: 8px 0 14px;
   border-radius: 10px; border: 1px solid var(--line-2); font-size: 15px; }
 
-.modalback { position: fixed; inset: 0; background: rgba(10,20,15,.45);
+.modalback { position: fixed; inset: 0; background: rgba(6, 42, 34,.45);
   display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
 /* Scoped to the PIN dialog. It used to be a second, later .modal rule, which
    overrode the review modal above it — that is why the review modal sat at

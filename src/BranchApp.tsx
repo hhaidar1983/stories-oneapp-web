@@ -619,7 +619,7 @@ function CameraCapture({
     const fs = Math.max(13, Math.round(w * 0.026));
     ctx.font = `600 ${fs}px Arial, Helvetica, sans-serif`;
     const barH = pad * 2 + lines.length * (fs + 5);
-    ctx.fillStyle = 'rgba(14,36,26,0.62)';
+    ctx.fillStyle = 'rgba(6, 42, 34,0.62)';
     ctx.fillRect(0, h - barH, w, barH);
     ctx.fillStyle = 'var(--on-green)';
     ctx.textBaseline = 'top';
@@ -724,7 +724,7 @@ function CameraCapture({
           {ready && !err && (
             <div style={{ position: 'absolute', bottom: 160, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6, zIndex: 6 }}>
               {[1, 2, 3].map((z) => (
-                <button key={z} onClick={() => { setZoom(z); zoomRef.current = z; }} style={{ background: zoom === z ? 'rgba(8,108,66,0.95)' : 'rgba(0,0,0,0.55)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: 999, padding: '6px 13px', fontSize: 14, fontWeight: 700 }}>{z}×</button>
+                <button key={z} onClick={() => { setZoom(z); zoomRef.current = z; }} style={{ background: zoom === z ? 'rgba(0, 88, 68,0.95)' : 'rgba(0,0,0,0.55)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: 999, padding: '6px 13px', fontSize: 14, fontWeight: 700 }}>{z}×</button>
               ))}
             </div>
           )}
@@ -733,7 +733,7 @@ function CameraCapture({
             <span className={`camgeo ${geoState === 'ok' ? 'ok' : geoState === 'off' ? 'bad' : ''}`}>{geoLabel}</span>
           </div>
           {recording && (
-            <div style={{ position: 'absolute', bottom: 206, left: '50%', transform: 'translateX(-50%)', background: 'rgba(190,45,45,0.95)', color: '#fff', padding: '5px 14px', borderRadius: 999, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, zIndex: 6 }}>
+            <div style={{ position: 'absolute', bottom: 206, left: '50%', transform: 'translateX(-50%)', background: 'rgba(208, 59, 59,0.95)', color: '#fff', padding: '5px 14px', borderRadius: 999, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 7, zIndex: 6 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#fff', display: 'inline-block' }} />
               REC {Math.floor(recSecs / 60)}:{String(recSecs % 60).padStart(2, '0')}
             </div>
