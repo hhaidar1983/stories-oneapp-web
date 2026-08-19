@@ -10,16 +10,16 @@ const TYPE_OPTIONS = [
 ];
 
 const box: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
   borderRadius: 10,
   padding: 14,
   marginBottom: 14,
 };
 const inp: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #DCE8E1',
-  color: '#14201A',
+  background: 'var(--card)',
+  border: '1px solid var(--line)',
+  color: 'var(--ink)',
   borderRadius: 6,
   padding: '6px 8px',
   fontSize: 13,
@@ -28,12 +28,12 @@ const inp: React.CSSProperties = {
 };
 const lbl: React.CSSProperties = {
   fontSize: 11,
-  color: '#6B7D73',
+  color: 'var(--muted)',
   display: 'block',
   marginBottom: 4,
 };
 const btn: React.CSSProperties = {
-  background: '#086C42',
+  background: 'var(--green)',
   color: '#fff',
   border: 'none',
   borderRadius: 6,
@@ -43,8 +43,8 @@ const btn: React.CSSProperties = {
 };
 const btnGhost: React.CSSProperties = {
   background: '#fff',
-  color: '#086C42',
-  border: '1px solid #086C42',
+  color: 'var(--green)',
+  border: '1px solid var(--green)',
   borderRadius: 6,
   padding: '6px 10px',
   fontSize: 12,
@@ -52,8 +52,8 @@ const btnGhost: React.CSSProperties = {
 };
 const btnX: React.CSSProperties = {
   background: '#fff',
-  color: '#B4442E',
-  border: '1px solid #E4C9C2',
+  color: 'var(--danger)',
+  border: '1px solid var(--danger-line)',
   borderRadius: 6,
   padding: '4px 9px',
   fontSize: 12,
@@ -225,21 +225,21 @@ export function ChecklistEditor({ api }: { api: Api }) {
             </option>
           ))}
         </select>
-        <div style={{ fontSize: 11, color: '#6B7D73', marginTop: 6 }}>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
           Each branch has its own Opening, Shift Handover and Closing checklists.
           Editing here changes only the selected branch.
         </div>
       </div>
 
       {error && (
-        <div style={{ ...box, borderColor: '#E4C9C2', color: '#B4442E' }}>
+        <div style={{ ...box, borderColor: 'var(--danger-line)', color: 'var(--danger)' }}>
           {error}
         </div>
       )}
-      {loading && <div style={{ color: '#6B7D73' }}>Loading…</div>}
+      {loading && <div style={{ color: 'var(--muted)' }}>Loading…</div>}
 
       {!branch && !loading && (
-        <div style={{ color: '#6B7D73' }}>
+        <div style={{ color: 'var(--muted)' }}>
           Pick a branch to view and edit its checklists.
         </div>
       )}
@@ -258,7 +258,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
               }}
             >
               <div>
-                <strong style={{ color: '#14201A', fontSize: 15 }}>
+                <strong style={{ color: 'var(--ink)', fontSize: 15 }}>
                   {sec.name}
                 </strong>
                 <span
@@ -267,13 +267,13 @@ export function ChecklistEditor({ api }: { api: Api }) {
                     fontSize: 11,
                     padding: '2px 8px',
                     borderRadius: 10,
-                    background: sec.isOverride ? '#E7F1EC' : '#EEF1EF',
-                    color: sec.isOverride ? '#086C42' : '#6B7D73',
+                    background: sec.isOverride ? 'var(--green-l)' : 'var(--line)',
+                    color: sec.isOverride ? 'var(--green)' : 'var(--muted)',
                   }}
                 >
                   {sec.isOverride ? 'Custom for this branch' : 'Company default'}
                 </span>
-                <span style={{ marginLeft: 8, fontSize: 11, color: '#6B7D73' }}>
+                <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--muted)' }}>
                   {sec.items.length} items
                 </span>
               </div>
@@ -299,13 +299,13 @@ export function ChecklistEditor({ api }: { api: Api }) {
                   setDrag(null);
                 }}
                 style={{
-                  border: '1px solid #EEF1EF',
+                  border: '1px solid var(--line)',
                   borderRadius: 8,
                   padding: 10,
                   marginBottom: 8,
                   background:
                     drag && drag.key === sec.key && drag.from === idx
-                      ? '#F0F6F2'
+                      ? 'var(--green-l2)'
                       : '#fff',
                 }}
               >
@@ -316,11 +316,11 @@ export function ChecklistEditor({ api }: { api: Api }) {
                       onDragStart={() => setDrag({ key: sec.key, from: idx })}
                       onDragEnd={() => setDrag(null)}
                       title="Drag to reorder"
-                      style={{ cursor: 'grab', color: '#9AA8A0', fontSize: 16, lineHeight: 1, userSelect: 'none' }}
+                      style={{ cursor: 'grab', color: 'var(--muted)', fontSize: 16, lineHeight: 1, userSelect: 'none' }}
                     >
                       ⣿
                     </div>
-                    <div style={{ fontSize: 11, color: '#6B7D73' }}>{idx + 1}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>{idx + 1}</div>
                     <button
                       style={btnGhost}
                       onClick={() => move(sec.key, idx, -1)}
@@ -379,7 +379,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
                       <label
                         style={{
                           fontSize: 12,
-                          color: '#14201A',
+                          color: 'var(--ink)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4,
@@ -397,7 +397,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
                       <label
                         style={{
                           fontSize: 12,
-                          color: '#14201A',
+                          color: 'var(--ink)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4,
@@ -415,7 +415,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
                       <label
                         style={{
                           fontSize: 12,
-                          color: '#14201A',
+                          color: 'var(--ink)',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4,
@@ -471,7 +471,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
                           <label
                             style={{
                               fontSize: 12,
-                              color: '#14201A',
+                              color: 'var(--ink)',
                               display: 'flex',
                               alignItems: 'center',
                               gap: 4,
@@ -523,7 +523,7 @@ export function ChecklistEditor({ api }: { api: Api }) {
                 {savingKey === sec.key ? 'Saving…' : 'Save ' + sec.name}
               </button>
               {savedKey === sec.key && (
-                <span style={{ color: '#086C42', fontSize: 12 }}>Saved ✓</span>
+                <span style={{ color: 'var(--green)', fontSize: 12 }}>Saved ✓</span>
               )}
             </div>
           </div>

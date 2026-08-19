@@ -3,8 +3,8 @@ import { Api, EscalationRow } from './api';
 
 const SEV_COLOR: Record<string, string> = {
   critical: 'var(--danger)',
-  high: '#d98324',
-  medium: '#c9a227',
+  high: 'var(--warn-d)',
+  medium: 'var(--warn)',
 };
 const TRIGGER_LABEL: Record<string, string> = {
   flagged_evidence: 'Flagged evidence',

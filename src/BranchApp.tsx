@@ -357,7 +357,7 @@ export function BranchApp({ api, me }: { api: Api; me: Me | null }) {
               const col = !!collapsed[section];
               out.push(
                 <div key={'sec-' + section} className="checklist-section" onClick={() => setCollapsed((c) => ({ ...c, [section]: !c[section] }))}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', margin: '18px 0 8px', padding: '9px 12px', background: '#123524', color: '#eaf3ee', borderRadius: 8 }}>
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', margin: '18px 0 8px', padding: '9px 12px', background: 'var(--green-dd)', color: 'var(--on-green)', borderRadius: 8 }}>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{col ? '▸' : '▾'} {section}</span>
                   <span style={{ fontSize: 12, opacity: 0.65 }}>{done}/{req.length}</span>
                 </div>,
@@ -621,7 +621,7 @@ function CameraCapture({
     const barH = pad * 2 + lines.length * (fs + 5);
     ctx.fillStyle = 'rgba(14,36,26,0.62)';
     ctx.fillRect(0, h - barH, w, barH);
-    ctx.fillStyle = '#eaf3ee';
+    ctx.fillStyle = 'var(--on-green)';
     ctx.textBaseline = 'top';
     lines.forEach((ln, i) => ctx.fillText(ln, pad, h - barH + pad + i * (fs + 5)));
   }

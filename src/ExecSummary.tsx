@@ -75,7 +75,7 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
         <button onClick={() => loadSummary(date)}>Refresh</button>
       </div>
       {err ? <div className="err">{err}</div> : null}
-      {msg ? <div style={{ color: '#2fbd74', margin: '6px 0' }}>{msg}</div> : null}
+      {msg ? <div style={{ color: 'var(--green)', margin: '6px 0' }}>{msg}</div> : null}
       {t ? (
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '10px 0' }}>
           <Stat label="Branches reporting" value={t.branchesReporting} />
@@ -130,8 +130,8 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
           ))}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <button onClick={addRecipient}>Add recipient</button>
-            <button disabled={busy} onClick={save} style={{ background: '#1f7a4d', color: '#fff' }}>Save settings</button>
-            <button disabled={busy} onClick={sendNow} style={{ background: '#2a6f97', color: '#fff' }}>Send now (this day)</button>
+            <button disabled={busy} onClick={save} style={{ background: 'var(--green)', color: '#fff' }}>Save settings</button>
+            <button disabled={busy} onClick={sendNow} style={{ background: 'var(--green)', color: '#fff' }}>Send now (this day)</button>
           </div>
           <div style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
             Email uses the Microsoft/Outlook sender; WhatsApp uses the 4jawaly channel. Each is only sent when its credentials are configured on the server.

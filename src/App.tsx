@@ -27,13 +27,13 @@ const SETTINGS_ROLES = ['admin', 'head_office'];
 // Roles allowed to enroll staff faces / set PINs (matches the backend guard).
 const MANAGER_ROLES = ['admin', 'head_office', 'hq_reviewer', 'ops_manager', 'area_manager'];
 
-const bsBox: React.CSSProperties = { background: '#ffffff', border: '1px solid #DCE8E1', borderRadius: 10, padding: 14, marginBottom: 14 };
-const bsLbl: React.CSSProperties = { fontSize: 11, color: '#6B7D73', display: 'block', marginBottom: 4 };
-const bsInp: React.CSSProperties = { background: '#ffffff', color: '#14201A', border: '1px solid #DCE8E1', borderRadius: 8, padding: '7px 9px', fontSize: 14, width: '100%', boxSizing: 'border-box' };
+const bsBox: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, padding: 14, marginBottom: 14 };
+const bsLbl: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 };
+const bsInp: React.CSSProperties = { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--line)', borderRadius: 8, padding: '7px 9px', fontSize: 14, width: '100%', boxSizing: 'border-box' };
 
 function BSwitch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 44, height: 26, borderRadius: 999, border: 'none', cursor: 'pointer', background: on ? '#086C42' : '#C9D6CE', position: 'relative', transition: 'background .15s', flex: '0 0 auto' }}>
+    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 44, height: 26, borderRadius: 999, border: 'none', cursor: 'pointer', background: on ? 'var(--green)' : 'var(--line)', position: 'relative', transition: 'background .15s', flex: '0 0 auto' }}>
       <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
     </button>
   );
@@ -106,8 +106,8 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search branches…" style={{ ...bsInp, marginBottom: 8 }} />
           <div style={{ ...bsBox, padding: 4, maxHeight: 430, overflowY: 'auto' }}>
             {filtered.map((r) => (
-              <button key={r.branch_id} type="button" onClick={() => select(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: r.branch_id === selId ? '#EAF4EE' : 'transparent', border: 'none', color: '#14201A', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', flex: '0 0 auto', background: r.active ? '#086C42' : '#8b978f' }} />
+              <button key={r.branch_id} type="button" onClick={() => select(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: r.branch_id === selId ? 'var(--green-l)' : 'transparent', border: 'none', color: 'var(--ink)', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flex: '0 0 auto', background: r.active ? 'var(--green)' : 'var(--muted)' }} />
                 <span style={{ flex: 1, fontSize: 13 }}>{r.branch_name || r.branch_id}</span>
                 <span style={{ fontSize: 11, opacity: 0.5 }}>{r.branch_id}</span>
               </button>
@@ -142,8 +142,8 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
               <BRow label="Email" on={draft.ch_email} onChange={(v) => patch({ ch_email: v })} />
               <BRow label="WhatsApp" on={draft.ch_whatsapp} onChange={(v) => patch({ ch_whatsapp: v })} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 14 }}>
-                <button type="button" onClick={save} disabled={saving} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save changes'}</button>
-                {saved && <span style={{ fontSize: 12, color: '#086C42', fontWeight: 700 }}>Saved ✓</span>}
+                <button type="button" onClick={save} disabled={saving} style={{ background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save changes'}</button>
+                {saved && <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
               </div>
             </div>
           )}
@@ -213,28 +213,28 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
   return (
     <>
       <div className="sectionlabel">People &amp; permissions</div>
-      <p style={{ fontSize: 12, color: '#6B7D73', marginTop: -2, marginBottom: 12 }}>Add the people who use Stories OneApp — their role (what they can access), email, WhatsApp, and branch. Managed by admin.</p>
+      <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: -2, marginBottom: 12 }}>Add the people who use Stories OneApp — their role (what they can access), email, WhatsApp, and branch. Managed by admin.</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 280px', minWidth: 250 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people…" style={{ ...bsInp, flex: 1 }} />
-            <button type="button" onClick={addNew} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
+            <button type="button" onClick={addNew} style={{ background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add</button>
           </div>
           <div style={{ ...bsBox, padding: 4, maxHeight: 430, overflowY: 'auto' }}>
             {filtered.map((r) => (
-              <button key={r.id} type="button" onClick={() => edit(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: draft && draft.id === r.id ? '#EAF4EE' : 'transparent', border: 'none', color: '#14201A', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: r.active ? '#086C42' : '#C9D6CE' }} />
+              <button key={r.id} type="button" onClick={() => edit(r)} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: draft && draft.id === r.id ? 'var(--green-l)' : 'transparent', border: 'none', color: 'var(--ink)', padding: '9px 10px', borderRadius: 8, cursor: 'pointer' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: r.active ? 'var(--green)' : 'var(--line)' }} />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 13, fontWeight: 600 }}>{r.name}</span>
-                  <span style={{ display: 'block', fontSize: 11, color: '#6B7D73' }}>{roleLabel(r.role)}{r.branch_name ? ' · ' + r.branch_name : ''}</span>
+                  <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{roleLabel(r.role)}{r.branch_name ? ' · ' + r.branch_name : ''}</span>
                 </span>
               </button>
             ))}
-            {filtered.length === 0 && <div style={{ padding: 12, fontSize: 12, color: '#6B7D73' }}>No people match.</div>}
+            {filtered.length === 0 && <div style={{ padding: 12, fontSize: 12, color: 'var(--muted)' }}>No people match.</div>}
           </div>
         </div>
         <div style={{ flex: '1 1 320px', minWidth: 280 }}>
-          {!draft && <div style={{ ...bsBox, color: '#6B7D73', fontSize: 13 }}>Select a person to edit, or add a new one.</div>}
+          {!draft && <div style={{ ...bsBox, color: 'var(--muted)', fontSize: 13 }}>Select a person to edit, or add a new one.</div>}
           {draft && (
             <div style={bsBox}>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 10 }}>{isNew ? 'New person' : draft.name}</div>
@@ -261,9 +261,9 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
                 <BSwitch on={draft.active} onChange={(v) => patch({ active: v })} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button type="button" onClick={save} disabled={saving} style={{ background: '#086C42', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : isNew ? 'Create person' : 'Save changes'}</button>
-                {saved && <span style={{ fontSize: 12, color: '#086C42', fontWeight: 700 }}>Saved ✓</span>}
-                <button type="button" onClick={() => setDraft(null)} style={{ background: 'transparent', color: '#6B7D73', border: 'none', fontSize: 13, cursor: 'pointer', marginLeft: 'auto' }}>Cancel</button>
+                <button type="button" onClick={save} disabled={saving} style={{ background: 'var(--green)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : isNew ? 'Create person' : 'Save changes'}</button>
+                {saved && <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
+                <button type="button" onClick={() => setDraft(null)} style={{ background: 'transparent', color: 'var(--muted)', border: 'none', fontSize: 13, cursor: 'pointer', marginLeft: 'auto' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -459,34 +459,34 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
       </>
     );
   }
-  const cardStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'flex-start', textAlign: 'left', width: '100%', background: '#ffffff', border: '1px solid #DCE8E1', borderRadius: 14, padding: 16, cursor: 'pointer', color: '#14201A' };
+  const cardStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'flex-start', textAlign: 'left', width: '100%', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 14, padding: 16, cursor: 'pointer', color: 'var(--ink)' };
   const icStyle = (bg: string): React.CSSProperties => ({ width: 44, height: 44, borderRadius: 11, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21, background: bg });
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 6 };
-  const glabel: React.CSSProperties = { fontSize: 11.5, fontWeight: 800, letterSpacing: 1.2, color: '#6B7D73', textTransform: 'uppercase', margin: '20px 2px 10px' };
+  const glabel: React.CSSProperties = { fontSize: 11.5, fontWeight: 800, letterSpacing: 1.2, color: 'var(--muted)', textTransform: 'uppercase', margin: '20px 2px 10px' };
   const Card = ({ id, icon, tone, title, desc }: { id: 'settings' | 'branches' | 'people' | 'checklists' | 'manage-checklists'; icon: string; tone: string; title: string; desc: string }) => (
     <button type="button" style={cardStyle} onClick={() => setSec(id)}>
       <span style={icStyle(tone)}>{icon}</span>
       <span style={{ flex: 1 }}>
         <span style={{ display: 'block', fontSize: 15.5, fontWeight: 700, marginBottom: 3 }}>{title}</span>
-        <span style={{ display: 'block', fontSize: 12.8, color: '#6B7D73', lineHeight: 1.45 }}>{desc}</span>
+        <span style={{ display: 'block', fontSize: 12.8, color: 'var(--muted)', lineHeight: 1.45 }}>{desc}</span>
       </span>
-      <span style={{ color: '#c3d2c9', fontSize: 20, alignSelf: 'center' }}>›</span>
+      <span style={{ color: 'var(--line)', fontSize: 20, alignSelf: 'center' }}>›</span>
     </button>
   );
   return (
     <>
       <div style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px' }}>Admin &amp; Settings</div>
-      <p style={{ color: '#6B7D73', fontSize: 13.5, marginTop: 0, marginBottom: 4 }}>Manage how Stories OneApp escalates problems and who can use it.</p>
+      <p style={{ color: 'var(--muted)', fontSize: 13.5, marginTop: 0, marginBottom: 4 }}>Manage how Stories OneApp escalates problems and who can use it.</p>
       <div style={glabel}>Alerts &amp; escalations</div>
       <div style={grid}>
-        <Card id="settings" icon="🚨" tone="#e7f2eb" title="Escalation chain" desc="Who gets alerted at each level, and how fast a problem climbs the chain." />
-        <Card id="branches" icon="🔔" tone="#fdeede" title="Branch alerts" desc="Per-branch deadlines, which problems trigger, and delivery channels." />
+        <Card id="settings" icon="🚨" tone="var(--green-l)" title="Escalation chain" desc="Who gets alerted at each level, and how fast a problem climbs the chain." />
+        <Card id="branches" icon="🔔" tone="var(--green-l)" title="Branch alerts" desc="Per-branch deadlines, which problems trigger, and delivery channels." />
       </div>
       <div style={glabel}>Organization</div>
       <div style={grid}>
-        <Card id="people" icon="👥" tone="#e6eefb" title="People & permissions" desc="Add people, set their role and branch, and control access." />
-        <Card id="checklists" icon="📋" tone="#f0ecfa" title="Checklists" desc="Edit Opening, Handover and Closing items, per branch." />
-        <Card id="manage-checklists" icon="📝" tone="#e8f4ea" title="Manage Checklists" desc="Define the checklist catalog, then set which checklists each branch runs and the order staff see them in." />
+        <Card id="people" icon="👥" tone="var(--green-l)" title="People & permissions" desc="Add people, set their role and branch, and control access." />
+        <Card id="checklists" icon="📋" tone="var(--green-l)" title="Checklists" desc="Edit Opening, Handover and Closing items, per branch." />
+        <Card id="manage-checklists" icon="📝" tone="var(--green-l)" title="Manage Checklists" desc="Define the checklist catalog, then set which checklists each branch runs and the order staff see them in." />
       </div>
     </>
   );
