@@ -178,6 +178,22 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
   color: #fff; font-size: 13px; font-weight: 600; text-decoration: underline;
   background: rgba(255,255,255,.14); padding: 8px 14px; border-radius: 9px; }
 .rvact { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
+/* Fix / escalate row on a flagged step. These buttons carried only a
+   background colour inline; the global reset removes padding from every
+   button, so the two sat almost edge to edge however wide the gap was. */
+.rvresolve { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--line); }
+.rvresolve .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.rvresolve button { font-size: 12.5px; font-weight: 700; padding: 9px 15px;
+  border-radius: 10px; border: 1.5px solid var(--line); background: var(--card);
+  color: var(--muted); }
+.rvresolve button:disabled { opacity: .55; cursor: default; }
+.rvresolve button.fix { background: var(--green); border-color: var(--green); color: #fff; }
+.rvresolve button.esc { background: var(--warn-d); border-color: var(--warn-d); color: #fff; }
+.rvresolve textarea { width: 100%; box-sizing: border-box; font-size: 13px; padding: 10px 12px;
+  border: 1.5px solid var(--line-2); border-radius: 10px; resize: vertical; color: var(--ink);
+  background: var(--card); }
+.rvresolved { margin-top: 8px; font-size: 13px; font-weight: 600; }
 .rvact button { min-width: 84px; font-size: 12.5px; font-weight: 700; padding: 8px 14px;
   border-radius: 10px; border: 1.5px solid var(--line); color: var(--muted); background: #fff; }
 .rvact button.sel-ok { background: var(--green); border-color: var(--green); color: #fff; }
