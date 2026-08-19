@@ -127,7 +127,19 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .err { background: #fdeaea; border: 1px solid #f4c9c7; color: #a3231f; border-radius: 12px; padding: 12px 15px; font-size: 13px; margin-bottom: 16px; }
 .center { text-align: center; padding: 60px 20px; color: var(--muted); }
 .alerts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-.alert { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--danger); border-radius: 12px; padding: 12px 15px; box-shadow: var(--shadow); }
+/* The stripe carries the severity. Every alert used to be red, so an
+   all-clear notification looked exactly like a level-3 escalation and the
+   colour told the reader nothing. Unknown kinds stay neutral rather than
+   red — a new alert type should not silently announce itself as an alarm. */
+.alert { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 12px; padding: 12px 15px; box-shadow: var(--shadow); }
+.alert.k-escalation { border-left-color: var(--danger); }
+.alert.k-flagged    { border-left-color: var(--warn); }
+.alert.k-clear      { border-left-color: var(--green); }
+.alert.k-digest     { border-left-color: var(--line); }
+.alert .ic { font-size: 16px; line-height: 1; flex: 0 0 auto; color: var(--muted); }
+.alert.k-escalation .ic { color: var(--danger); }
+.alert.k-flagged .ic    { color: var(--warn); }
+.alert.k-clear .ic      { color: var(--green); }
 .alert .at { flex: 1; }
 .alert .at .title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
 .alert .at .body { font-size: 12.5px; color: var(--muted); }
