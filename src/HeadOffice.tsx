@@ -27,9 +27,15 @@ function fmtDur(sec?: number | null): string {
   const s = sec % 60;
   return m ? `${m}m ${s}s` : `${s}s`;
 }
+// Reviewers think in seconds, not milliseconds: "0ms" and "398ms" read as a
+// glitch rather than as "they did not stop to look at it".
 function fmtDwell(ms: number | null): string {
   if (ms == null) return '—';
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+  if (ms < 1000) return 'under 1s';
+  if (ms < 60000) return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)}s`;
+  const m = Math.floor(ms / 60000);
+  const s = Math.round((ms % 60000) / 1000);
+  return s ? `${m}m ${s}s` : `${m}m`;
 }
 
 // Only allow https media links; never render a javascript:/data: URL into href.
@@ -271,6 +277,11 @@ function ReviewModal({ api, detail, onClose, onDone }: {
     }
   }
 
+  // How many individual steps were answered too quickly. The total duration on
+  // its own reads as a contradiction ("32m total" next to "completed too fast"),
+  // so the band names the steps instead.
+  const quickSteps = detail.items.filter((x) => x.paceFlag).length;
+
   return (
     <div className="overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
@@ -286,47 +297,51 @@ function ReviewModal({ api, detail, onClose, onDone }: {
           <div className={`paceband ${detail.paceFlag ? 'bad' : ''}`}>
             <span>⏱ Total time on checklist: <b>{fmtDur(detail.durationSec)}</b></span>
             {detail.paceFlag
-              ? <span className="pacewarn">⚠ Completed suspiciously fast — verify the photo/video evidence before approving.</span>
+              ? <span className="pacewarn">
+                  {quickSteps > 0
+                    ? `${quickSteps} step${quickSteps === 1 ? ' was' : 's were'} answered almost instantly — worth checking the evidence before approving.`
+                    : 'Finished faster than expected — worth checking the evidence before approving.'}
+                </span>
               : <span className="paceok">Pace looks normal</span>}
           </div>
           {detail.items.map((i) => {
             const bad = i.flagged || i.inRange === false || i.valueCheck === 'fail';
-            const valTxt =
+            const isNote = i.type === 'text';
+            // The headline result, as one chip. A free-text answer gets its own
+            // block below the label instead, so a long note cannot stretch a pill.
+            const resultTxt =
               i.type === 'number' ? `${i.valueNumber ?? '—'}${i.inRange === false ? ' · out of range' : ''}`
-              : i.type === 'check' ? (i.valueCheck === 'pass' ? 'Passed' : i.valueCheck === 'fail' ? 'Failed' : '—')
-              : i.type === 'text' ? (i.valueText ? `“${i.valueText}”` : 'No note')
-              : i.media.length ? `${i.type} evidence` : 'No media';
+              : i.type === 'check' ? (i.valueCheck === 'pass' ? '✓ Passed' : i.valueCheck === 'fail' ? '✕ Failed' : 'Not answered')
+              : isNote ? (i.valueText ? 'Note added' : 'No note')
+              : i.media.length ? `${i.media.length} ${i.media.length === 1 ? 'file' : 'files'}` : 'No media';
             return (
-              <div key={i.id} className="rvitem">
-                <div className="rvmeta">
-                  <div className="rl">
-                    {i.label}
-                    <span className={`dwell ${i.paceFlag ? 'bad' : ''}`}>
-                      · {fmtDwell(i.dwellMs)}{i.paceFlag ? ' ⚠ too fast' : ''}
+              <div key={i.id} className={`rvitem${bad ? ' needslook' : ''}`}>
+                <div className="rvl">{i.label}</div>
+                {isNote && i.valueText ? <div className="rvnote">{i.valueText}</div> : null}
+                <div className="rvchips">
+                  <span className={`chip ${bad ? 'bad' : 'ok'}`}>{resultTxt}</span>
+                  {i.dwellMs != null && (
+                    <span className={`chip ${i.paceFlag ? 'warn' : ''}`}>
+                      ⏱ {fmtDwell(i.dwellMs)}{i.paceFlag ? ' · very quick' : ''}
                     </span>
-                  </div>
-                  <div className={`rv ${bad ? 'bad' : ''}`}>
-                    {valTxt}
-                    {(i.media ?? []).map((m) => {
-                      const href = safeHttps(m.viewUrl);
-                      const dist = m.distanceM != null
-                        ? m.distanceM >= 1000 ? `${(m.distanceM / 1000).toFixed(1)} km` : `${m.distanceM} m`
-                        : null;
-                      return (
-                        <span key={m.id}>
-                          {href ? <> · <a href={href} target="_blank" rel="noreferrer">view</a></> : null}
-                          {m.geoFlag ? (
-                            <span style={{ color: 'var(--danger)', fontWeight: 700 }}> · 📍 off-site{dist ? ` (${dist} away)` : ''}</span>
-                          ) : m.gpsLat != null ? (
-                            <span style={{ color: 'var(--muted)' }}> · 📍 on-site{dist ? ` (${dist})` : ''}</span>
-                          ) : null}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  )}
+                  {(i.media ?? []).map((m) => {
+                    const dist = m.distanceM != null
+                      ? m.distanceM >= 1000 ? `${(m.distanceM / 1000).toFixed(1)} km` : `${m.distanceM} m`
+                      : null;
+                    // The thumbnails below are the way in to the photo itself, so
+                    // only the location is worth a chip here.
+                    if (m.geoFlag) {
+                      return <span key={m.id} className="chip bad">📍 Off-site{dist ? ` (${dist} away)` : ''}</span>;
+                    }
+                    if (m.gpsLat != null) {
+                      return <span key={m.id} className="chip">📍 On-site{dist ? ` (${dist})` : ''}</span>;
+                    }
+                    return null;
+                  })}
                 </div>
                 {(i.media ?? []).some((m) => safeHttps(m.viewUrl)) && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(84px,1fr))', gap: 6, marginTop: 8 }}>
+                  <div className="rvmedia">
                     {(i.media ?? []).map((m) => {
                       const href = safeHttps(m.viewUrl);
                       if (!href) return null;
