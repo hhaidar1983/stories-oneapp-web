@@ -99,8 +99,8 @@ function BranchSettings({ api }: { api: ReturnType<typeof createApi> }) {
 
   return (
     <>
-      <div className="sectionlabel">Branch alerts</div>
-      <p style={{ fontSize: 12, opacity: 0.7, marginTop: -2, marginBottom: 12 }}>Per-branch alerting: master on/off, checklist deadlines (Beirut time), which triggers fire, and delivery channels. Changes apply on the engine's next check.</p>
+      <div className="pagetitle">Branch alerts</div>
+      <p className="pagesub">Per-branch alerting: master on/off, checklist deadlines (Beirut time), which triggers fire, and delivery channels. Changes apply on the engine's next check.</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 250px', minWidth: 230 }}>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search branches…" style={{ ...bsInp, marginBottom: 8 }} />
@@ -212,8 +212,8 @@ function People({ api }: { api: ReturnType<typeof createApi> }) {
 
   return (
     <>
-      <div className="sectionlabel">People &amp; permissions</div>
-      <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: -2, marginBottom: 12 }}>Add the people who use Stories OneApp — their role (what they can access), email, WhatsApp, and branch. Managed by admin.</p>
+      <div className="pagetitle">People &amp; permissions</div>
+      <p className="pagesub">Add the people who use Stories OneApp — their role (what they can access), email, WhatsApp, and branch. Managed by admin.</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 280px', minWidth: 250 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -445,7 +445,10 @@ function Hub({ onOpen, me }: { onOpen: (key: string) => void; me: Me | null }) {
   );
 }
 
-function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
+// Only ever renders ONE back control: "Back to settings" inside a section,
+// "Menu" at the top level. The shell used to render its own Menu button as
+// well, so a section screen showed two stacked back buttons side by side.
+function AdminShell({ api, onMenu }: { api: ReturnType<typeof createApi>; onMenu: () => void }) {
   const [sec, setSec] = useState<'' | 'settings' | 'branches' | 'people' | 'checklists' | 'manage-checklists'>('');
   if (sec) {
     return (
@@ -475,8 +478,9 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
   );
   return (
     <>
-      <div style={{ fontSize: 20, fontWeight: 800, margin: '4px 0 2px' }}>Admin &amp; Settings</div>
-      <p style={{ color: 'var(--muted)', fontSize: 13.5, marginTop: 0, marginBottom: 4 }}>Manage how Stories OneApp escalates problems and who can use it.</p>
+      <button className="backbtn menuback" onClick={onMenu}>← Menu</button>
+      <div className="pagetitle">Admin &amp; Settings</div>
+      <p className="pagesub">Manage how Stories OneApp escalates problems and who can use it.</p>
       <div style={glabel}>Alerts &amp; escalations</div>
       <div style={grid}>
         <Card id="settings" icon="🚨" tone="var(--green-l)" title="Escalation chain" desc="Who gets alerted at each level, and how fast a problem climbs the chain." />
@@ -549,11 +553,13 @@ function Shell() {
           Hub({ onOpen: setOpenApp, me })
         ) : openApp === 'admin' ? (
           <>
-            {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
             {!me || !SETTINGS_ROLES.includes(me.role) ? (
-              <div className="err">Admin access required.</div>
+              <>
+                {h('button', { className: 'backbtn menuback', onClick: () => setOpenApp(null) }, '← Menu')}
+                <div className="err">Admin access required.</div>
+              </>
             ) : (
-              <AdminShell api={api} />
+              <AdminShell api={api} onMenu={() => setOpenApp(null)} />
             )}
           </>
         ) : openApp === 'faceenroll' ? (

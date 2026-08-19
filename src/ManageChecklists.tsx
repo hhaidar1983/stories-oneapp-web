@@ -398,8 +398,8 @@ export function ManageChecklists({ api }: { api: Api }) {
 
   return (
     <div>
-      <div className="sectionlabel">Manage checklists</div>
-      <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
+      <div className="pagetitle">Manage checklists</div>
+      <div className="pagesub">
         Add new checklist types, control which types each branch runs, and clone setups across branches.
       </div>
       <CatalogPanel api={api} />
