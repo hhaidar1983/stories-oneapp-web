@@ -95,12 +95,12 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
           <tbody>
             {sum.branches.map((b, i) => (
               <tr key={i}>
-                <td><b>{b.branch}</b></td>
-                <td>{b.checklist}</td>
-                <td>{statusLabel(b.status)}</td>
-                <td>{b.completionPct}%</td>
-                <td>{b.flagged}</td>
-                <td>{b.pending}</td>
+                <td data-label="Branch"><b>{b.branch}</b></td>
+                <td data-label="Checklist">{b.checklist}</td>
+                <td data-label="Status">{statusLabel(b.status)}</td>
+                <td data-label="Completion">{b.completionPct}%</td>
+                <td data-label="Flagged">{b.flagged}</td>
+                <td data-label="Pending">{b.pending}</td>
               </tr>
             ))}
           </tbody>

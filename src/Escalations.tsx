@@ -91,18 +91,18 @@ export function Escalations({ api }: { api: Api }) {
           )}
           {visible.map((r) => (
             <tr key={r.id}>
-              <td>
+              <td data-label="Branch">
                 <b>{r.branch.name}</b>
               </td>
-              <td style={{ textTransform: 'capitalize' }}>{r.templateKey}</td>
-              <td>
+              <td data-label="Checklist" style={{ textTransform: 'capitalize' }}>{r.templateKey}</td>
+              <td data-label="Issue">
                 <span style={{ color: SEV_COLOR[r.severity] || 'inherit', fontWeight: 700 }}>
                   {r.severity.toUpperCase()}
                 </span>{' '}
                 · {TRIGGER_LABEL[r.trigger] || r.trigger}
                 {r.reason ? <div style={{ fontSize: 12, opacity: 0.7 }}>{r.reason}</div> : null}
               </td>
-              <td>
+              <td data-label="Level">
                 <b>
                   L{r.currentLevel} · {r.levelTitle}
                 </b>
@@ -111,13 +111,13 @@ export function Escalations({ api }: { api: Api }) {
                     'no one assigned yet'}
                 </div>
               </td>
-              <td>{ageOf(r.createdAt)}</td>
-              <td>
+              <td data-label="Age">{ageOf(r.createdAt)}</td>
+              <td data-label="Status">
                 <span className={`st ${STATUS_CLASS[r.status] || 'st-part'}`}>
-                  {r.status.toUpperCase()}
+                  {r.status.replace(/^./, (c) => c.toUpperCase())}
                 </span>
               </td>
-              <td>
+              <td data-label="Action">
                 {r.status !== 'resolved' ? (
                   <div style={{ display: 'flex', gap: 6 }}>
                     {r.status === 'open' && (
