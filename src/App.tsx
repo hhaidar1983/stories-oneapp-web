@@ -486,7 +486,7 @@ function AdminShell({ api }: { api: ReturnType<typeof createApi> }) {
       <div style={grid}>
         <Card id="people" icon="👥" tone="#e6eefb" title="People & permissions" desc="Add people, set their role and branch, and control access." />
         <Card id="checklists" icon="📋" tone="#f0ecfa" title="Checklists" desc="Edit Opening, Handover and Closing items, per branch." />
-        <Card id="manage-checklists" icon="📝" tone="#e8f4ea" title="Manage Checklists" desc="Define the global checklist catalog and set which types each branch runs." />
+        <Card id="manage-checklists" icon="📝" tone="#e8f4ea" title="Manage Checklists" desc="Define the checklist catalog, then set which checklists each branch runs and the order staff see them in." />
       </div>
     </>
   );
