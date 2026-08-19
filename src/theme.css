@@ -151,8 +151,32 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 /* Same red as a failed step: a step answered in under a second is a warning
    worth the same weight, not a softer one. */
 .chip.warn { background: #fdeceb; color: var(--danger-d); }
-.rvmedia { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 6px; margin-top: 10px; }
+/* Evidence is what the reviewer is actually here to look at. These were 84px
+   squares — too small to tell whether a fridge reading or a briefing sheet was
+   right. auto-fit rather than auto-fill so a lone photo fills the width of the
+   card instead of sitting in a narrow first column. */
+.rvmedia { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px; margin-top: 10px; }
+.mediatile { position: relative; display: block; width: 100%; padding: 0;
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  background: var(--green-l2); aspect-ratio: 4 / 3; cursor: zoom-in; }
+.mediatile img, .mediatile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mediatile:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.mediatile .geotag { position: absolute; left: 4px; bottom: 4px; background: var(--danger);
+  color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+
+/* Full-screen viewer. object-fit: contain, never cover — a cropped photo is
+   exactly how a reviewer misses the thing they were meant to check. */
+.lightbox { position: fixed; inset: 0; z-index: 80; background: rgba(6, 42, 34, .92);
+  display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+.lightbox img, .lightbox video { max-width: 100%; max-height: calc(100vh - 120px);
+  object-fit: contain; border-radius: 8px; display: block; }
+.lightbox .lbclose { position: absolute; top: 14px; right: 16px; color: #fff;
+  font-size: 26px; line-height: 1; padding: 6px 10px; border-radius: 9px;
+  background: rgba(255,255,255,.14); }
+.lightbox .lbopen { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+  color: #fff; font-size: 13px; font-weight: 600; text-decoration: underline;
+  background: rgba(255,255,255,.14); padding: 8px 14px; border-radius: 9px; }
 .rvact { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
 .rvact button { min-width: 84px; font-size: 12.5px; font-weight: 700; padding: 8px 14px;
   border-radius: 10px; border: 1.5px solid var(--line); color: var(--muted); background: #fff; }
