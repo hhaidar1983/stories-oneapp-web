@@ -169,25 +169,25 @@ function ItemResolve({ api, submissionId, item }: { api: Api; submissionId: stri
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   }
   if (res.r === 'fixed') {
-    return <div className="rvresolved" style={{ marginTop: 6, color: 'var(--green)', fontWeight: 600 }}>Successfully fixed{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+    return <div className="rvresolved" style={{ color: 'var(--green)' }}>Successfully fixed{res.by ? ' — ' + res.by : ''}{res.note ? ' — ' + res.note : ''}</div>;
   }
   if (res.r === 'escalated') {
-    return <div className="rvresolved" style={{ marginTop: 6, color: 'var(--warn)', fontWeight: 600 }}>Escalated to Ops{res.by ? ' - ' + res.by : ''}{res.note ? ' - ' + res.note : ''}</div>;
+    return <div className="rvresolved" style={{ color: 'var(--warn-d)' }}>Escalated to Ops{res.by ? ' — ' + res.by : ''}{res.note ? ' — ' + res.note : ''}</div>;
   }
   return (
-    <div className="rvresolve" style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="rvresolve">
       {err ? <div className="err" style={{ margin: '4px 0' }}>{err}</div> : null}
       {mode !== 'escalate' ? (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ background: 'var(--green)', color: '#fff' }} disabled={busy} onClick={() => act('fixed')}>Mark fixed</button>
-          <button style={{ background: 'var(--warn-d)', color: '#fff' }} disabled={busy} onClick={() => setMode('escalate')}>Escalate to Ops</button>
+        <div className="btnrow">
+          <button className="fix" disabled={busy} onClick={() => act('fixed')}>Mark fixed</button>
+          <button className="esc" disabled={busy} onClick={() => setMode('escalate')}>Escalate to Ops</button>
         </div>
       ) : (
         <div>
-          <textarea placeholder="Your remarks for the Operations Manager" value={note} onChange={(e) => setNote(e.target.value)} rows={2} style={{ width: '100%', boxSizing: 'border-box' }} />
-          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+          <textarea placeholder="Your remarks for the Operations Manager" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+          <div className="btnrow">
             <button disabled={busy} onClick={() => setMode('')}>Cancel</button>
-            <button style={{ background: 'var(--warn-d)', color: '#fff' }} disabled={busy} onClick={() => act('escalated')}>Send to Ops</button>
+            <button className="esc" disabled={busy} onClick={() => act('escalated')}>Send to Ops</button>
           </div>
         </div>
       )}
