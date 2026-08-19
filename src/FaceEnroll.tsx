@@ -268,7 +268,7 @@ function SetPinModal({
 
   return (
     <div className="modalback" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="pinmodal" onClick={(e) => e.stopPropagation()}>
         <h3>Set a PIN for {staff.name}</h3>
         <p className="loginsub">4–6 digits. They can use this if face login ever fails.</p>
         {error && <div className="err">{error}</div>}

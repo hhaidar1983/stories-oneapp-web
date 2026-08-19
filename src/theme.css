@@ -92,11 +92,31 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 .modal { background: var(--bg); width: 100%; max-width: 640px; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
 .modal .mh { background: var(--green-dd); color: #eaf3ee; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
 .mbody { padding: 18px 20px; max-height: 60vh; overflow: auto; }
-.rvitem { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); }
-.rvitem:last-child { border-bottom: none; }
-.rvmeta { flex: 1; } .rvmeta .rl { font-size: 14px; font-weight: 600; } .rvmeta .rv { font-size: 12.5px; color: var(--muted); }
-.rvmeta .rv.bad { color: var(--danger); font-weight: 700; }
-.rvact button { font-size: 12px; font-weight: 700; padding: 7px 11px; border-radius: 9px; border: 1.5px solid var(--line); color: var(--muted); background: #fff; margin-left: 6px; }
+/* Review modal: one self-contained card per checklist step. Metadata rides in
+   chips under the label rather than inline with it, so a long question never
+   wraps around its own timing text, and the OK/Flag pair always sits in the
+   same place instead of moving with the label length. */
+.rvitem { background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  padding: 13px 15px; margin-bottom: 10px; }
+.rvitem:last-child { margin-bottom: 0; }
+.rvitem.needslook { border-color: #f0cfc9; background: #fffaf9; }
+.rvl { font-size: 14.5px; font-weight: 600; line-height: 1.4; color: var(--ink); }
+.rvnote { font-size: 13px; color: #4d5b53; background: #f5f8f6; border-radius: 9px;
+  padding: 8px 11px; margin-top: 8px; line-height: 1.45; }
+.rvchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;
+  font-weight: 600; padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  background: #f1f5f2; color: #5c6b62; }
+.chip.ok { background: #e6f4ec; color: #10693f; }
+.chip.bad { background: #fdeceb; color: #b42318; }
+/* Same red as a failed step: a step answered in under a second is a warning
+   worth the same weight, not a softer one. */
+.chip.warn { background: #fdeceb; color: #b42318; }
+.rvmedia { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 6px; margin-top: 10px; }
+.rvact { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+.rvact button { min-width: 84px; font-size: 12.5px; font-weight: 700; padding: 8px 14px;
+  border-radius: 10px; border: 1.5px solid var(--line); color: var(--muted); background: #fff; }
 .rvact button.sel-ok { background: var(--green); border-color: var(--green); color: #fff; }
 .rvact button.sel-flag { background: var(--danger); border-color: var(--danger); color: #fff; }
 .mfoot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; gap: 10px; background: #fff; }
@@ -116,15 +136,14 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 
 /* --- Anti-fraud pace/timing --- */
 .pace-bad { color: #b42318; font-weight: 700; }
-.paceband { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
-  background: var(--green-l); border: 1px solid var(--line); border-radius: 10px;
-  padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: var(--green-dd); }
+/* A pace problem is an alarm, not a nudge — it stays red so it is impossible
+   to skim past on the way to the Approve button. */
+.paceband { display: flex; flex-direction: column; gap: 3px;
+  background: var(--green-l); border: 1px solid #cfe6da; border-radius: 12px;
+  padding: 11px 14px; margin-bottom: 14px; font-size: 13px; color: var(--green-dd); }
 .paceband.bad { background: #fdecea; border-color: #f5c6c0; color: #8a1c12; }
-.paceband .pacewarn { font-weight: 700; }
-.paceband .paceok { color: var(--muted); }
-.dwell { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-left: 8px;
-  white-space: nowrap; }
-.dwell.bad { color: #b42318; }
+.paceband .pacewarn { font-weight: 700; font-size: 12.5px; }
+.paceband .paceok { color: var(--muted); font-size: 12.5px; }
 
 .logo .emblem { display: block; width: 34px; height: 34px; }
 
@@ -200,8 +219,8 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
   .overlay { padding: 12px 8px; }
   .modal { border-radius: 16px; }
   .mbody { max-height: 66vh; }
-  .rvitem { flex-wrap: wrap; }
-  .rvact { margin-left: auto; }
+  .rvitem { padding: 12px 13px; }
+  .rvact button { flex: 1; }
   .mfoot { flex-wrap: wrap; }
   .mfoot input { flex: 1 1 100%; }
   .mfoot .return, .mfoot .approve { flex: 1; text-align: center; }
@@ -273,8 +292,11 @@ tr.rowbtn { cursor: pointer; } tr.rowbtn:hover { background: var(--green-l); }
 
 .modalback { position: fixed; inset: 0; background: rgba(10,20,15,.45);
   display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
-.modal { background: #fff; border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; }
-.modal h3 { margin: 0 0 4px; color: #123524; }
+/* Scoped to the PIN dialog. It used to be a second, later .modal rule, which
+   overrode the review modal above it — that is why the review modal sat at
+   360px with 22px of white padding pushing its dark header away from the top. */
+.pinmodal { background: #fff; border-radius: 16px; padding: 22px; width: 100%; max-width: 360px; }
+.pinmodal h3 { margin: 0 0 4px; color: #123524; }
 .modalbtns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; align-items: center; }
 .pininput { width: 100%; box-sizing: border-box; padding: 14px; font-size: 24px; letter-spacing: 8px;
   text-align: center; border-radius: 10px; border: 1px solid #cddbd3; }
