@@ -278,6 +278,8 @@ function ReviewModal({ api, detail, onClose, onDone }: {
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The photo currently open full screen, if any.
+  const [zoom, setZoom] = useState<{ href: string; isVideo: boolean } | null>(null);
 
   async function decide(decision: 'approved' | 'returned') {
     setBusy(true);
@@ -362,12 +364,18 @@ function ReviewModal({ api, detail, onClose, onDone }: {
                       if (!href) return null;
                       const isVideo = (m.mime || '').indexOf('video/') === 0 || m.kind === 'video';
                       return (
-                        <a key={m.id} href={href} target="_blank" rel="noreferrer" style={{ position: 'relative', display: 'block', borderRadius: 8, overflow: 'hidden', background: 'rgba(255,255,255,0.06)', aspectRatio: '1 / 1' }}>
+                        <button
+                          key={m.id}
+                          type="button"
+                          className="mediatile"
+                          aria-label="View this photo full screen"
+                          onClick={() => setZoom({ href, isVideo })}
+                        >
                           {isVideo
-                            ? <video src={href} preload="metadata" muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                            : <img loading="lazy" src={href} alt="evidence" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-                          {m.geoFlag && <span style={{ position: 'absolute', left: 3, bottom: 3, background: 'var(--danger)', color: '#fff', fontSize: 9, padding: '1px 4px', borderRadius: 3 }}>off-site</span>}
-                        </a>
+                            ? <video src={href} preload="metadata" muted />
+                            : <img loading="lazy" src={href} alt="Evidence photo" />}
+                          {m.geoFlag && <span className="geotag">off-site</span>}
+                        </button>
                       );
                     })}
                   </div>
@@ -387,6 +395,28 @@ function ReviewModal({ api, detail, onClose, onDone }: {
           <button className="approve" disabled={busy} onClick={() => decide('approved')}>Approve</button>
         </div>
       </div>
+      {zoom && (
+        <div
+          className="lightbox"
+          onClick={() => setZoom(null)}
+          role="dialog"
+          aria-label="Evidence photo"
+        >
+          <button type="button" className="lbclose" aria-label="Close photo">✕</button>
+          {zoom.isVideo
+            ? <video src={zoom.href} controls autoPlay onClick={(e) => e.stopPropagation()} />
+            : <img src={zoom.href} alt="Evidence photo, full size" onClick={(e) => e.stopPropagation()} />}
+          <a
+            className="lbopen"
+            href={zoom.href}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Open the original
+          </a>
+        </div>
+      )}
     </div>
   );
 }
