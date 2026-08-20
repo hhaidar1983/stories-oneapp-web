@@ -127,7 +127,7 @@
     <div class="sub">Escalation ladder &mdash; open now</div>
     <div class="funnel" id="funnel"></div>
 
-    <div class="sub">Branch performance &mdash; today</div>
+    <div class="sub" id="perfhd">Branch performance</div>
     <div id="branches"></div>
 
     <div class="sub">Live escalations feed</div>
@@ -163,6 +163,16 @@
   // timezone used to default the date picker to the wrong day.
   // The operational day runs 05:00 to 05:00 Beirut, matching the rest of the
   // app, so a closing checklist filed at 02:00 still belongs to the day before.
+  // "today" is only true when the picker is on the current business day.
+  // Otherwise say which day, so the page never mislabels what it is showing.
+  function dayWord(sel){
+    if (!sel || sel === localDate()) return 'today';
+    var d = new Date(sel + 'T12:00:00Z');
+    return isNaN(d.getTime())
+      ? sel
+      : d.toLocaleDateString(undefined, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
   function localDate(){
     var bp = beirutParts();
     if (parseInt(bp.time.slice(0, 2), 10) >= 5) return bp.date;
@@ -216,9 +226,9 @@
     // hero
     document.getElementById('hero').innerHTML =
       hcard('g', pct(t.avgCompletion), 'Network completion', 'across reporting branches') +
-      hcard('g', (t.branchesReporting||0)+' / '+totalBranches, 'Branches reporting', 'submitted today') +
+      hcard('g', (t.branchesReporting||0)+' / '+totalBranches, 'Branches reporting', 'submitted '+dayWord(dateEl.value)) +
       hcard(open.length?'b':'g', open.length, 'Open escalations', 'all days &middot; '+hoOpen+' at Head Office') +
-      hcard((t.flaggedItems||0)?'w':'g', (t.flaggedItems||0), 'Flagged items today', 'Pending '+(t.pending||0)+' / Fixed '+(t.fixed||0)+' / Esc '+(t.escalated||0));
+      hcard((t.flaggedItems||0)?'w':'g', (t.flaggedItems||0), 'Flagged items '+dayWord(dateEl.value), 'Pending '+(t.pending||0)+' / Fixed '+(t.fixed||0)+' / Esc '+(t.escalated||0));
 
     // funnel
     document.getElementById('funnel').innerHTML = LEVELS.map(function(nm,i){
@@ -258,6 +268,8 @@
     }
 
     // Named timezone, and no seconds — a ticking second hand is noise, and an
+    var ph = document.getElementById('perfhd');
+    if (ph) ph.textContent = 'Branch performance \u2014 ' + dayWord(dateEl.value);
     // unlabelled clock next to a Beirut business day invites the wrong reading.
     var bp = beirutParts();
     document.getElementById('updated').textContent = 'Updated ' + bp.time + ' ' + bp.zone;
