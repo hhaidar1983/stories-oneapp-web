@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Api, ExecConfig, ExecSummaryData, Me, Recipient } from './api';
 
 const emptyRecipient = (): Recipient => ({ name: '', email: '', whatsapp: '' });
@@ -21,6 +21,14 @@ function statusLabel(s: string): string {
   if (STATUS_LABELS[k]) return STATUS_LABELS[k];
   return k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
+function statusChip(s: string): string {
+  const k = String(s || '').toLowerCase().trim();
+  if (k === 'flagged') return 'chip sev-high';
+  if (k === 'approved' || k === 'submitted') return 'chip stt-acknowledged';
+  return 'chip stt-medium';
+}
+
+type Lens = 'all' | 'flagged' | 'attention';
 
 export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   const today = new Date(Date.now() - 5 * 3600 * 1000).toLocaleDateString('en-CA');
@@ -30,6 +38,10 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [lens, setLens] = useState<Lens>('all');
+  // The denominator for "branches reporting" — a count with no total is not a
+  // fact anyone can act on.
+  const [branchTotal, setBranchTotal] = useState<number | null>(null);
 
   const canEdit = !!me && (me.role === 'admin' || me.role === 'head_office');
 
@@ -38,6 +50,9 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   }
   useEffect(() => { loadSummary(date); }, []);
   useEffect(() => { api.execConfig().then(setCfg).catch(() => {}); }, []);
+  useEffect(() => {
+    api.activeBranches().then((b) => setBranchTotal(Array.isArray(b) ? b.length : null)).catch(() => {});
+  }, [api]);
 
   function setRecipient(idx: number, field: keyof Recipient, val: string) {
     if (!cfg) return;
@@ -67,48 +82,178 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
   }
 
   const t = sum ? sum.totals : null;
+  const all = sum ? sum.branches : [];
+  const attention = useMemo(
+    () => all.filter((b) => String(b.status).toLowerCase() === 'flagged' || b.completionPct < 100),
+    [all],
+  );
+  const shown = useMemo(() => {
+    if (lens === 'flagged') return all.filter((b) => b.flagged > 0);
+    if (lens === 'attention') return attention;
+    return all;
+  }, [all, attention, lens]);
+
+  // Pending / Fixed / Escalated are a breakdown of Flagged, so they belong
+  // inside that card as one bar rather than beside it as three more numbers.
+  const flagged = t ? t.flaggedItems || 0 : 0;
+  const parts = t ? [
+    { k: 'pending', n: t.pending || 0, c: 'var(--m-warn)' },
+    { k: 'fixed', n: t.fixed || 0, c: 'var(--m-good)' },
+    { k: 'escalated', n: t.escalated || 0, c: 'var(--m-crit)' },
+  ] : [];
+  const partTotal = parts.reduce((a, p) => a + p.n, 0) || 1;
+
+  function toggle(l: Lens) {
+    setLens((cur) => (cur === l ? 'all' : l));
+  }
+
   return (
     <div>
       <div className="pagetitle">Executive summary</div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0' }}>
-        <input type="date" value={date} onChange={(e) => { setDate(e.target.value); loadSummary(e.target.value); }} />
-        <button onClick={() => loadSummary(date)}>Refresh</button>
+      <div className="daterow">
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => { setDate(e.target.value); loadSummary(e.target.value); }}
+        />
+        <button className="btn-ghost" onClick={() => loadSummary(date)}>Refresh</button>
       </div>
       {err ? <div className="err">{err}</div> : null}
-      {msg ? <div style={{ color: 'var(--green)', margin: '6px 0' }}>{msg}</div> : null}
+      {msg ? <div className="okmsg">{msg}</div> : null}
+
       {t ? (
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '10px 0' }}>
-          <Stat label="Branches reporting" value={t.branchesReporting} />
-          <Stat label="Avg completion" value={t.avgCompletion + '%'} />
-          <Stat label="Flagged tasks" value={t.flaggedItems} />
-          <Stat label="Pending" value={t.pending} />
-          <Stat label="Fixed" value={t.fixed} />
-          <Stat label="Escalated" value={t.escalated} />
-          <Stat label="Open escalations (this day)" value={t.openEscalations} />
+        <div className="statgrid">
+          <div className="statcard">
+            <div className="n">
+              {t.branchesReporting}
+              {branchTotal ? <span className="of">/{branchTotal}</span> : null}
+            </div>
+            <div className="l">Branches reported</div>
+            <div
+              className="meter"
+              role="img"
+              aria-label={`${t.branchesReporting} of ${branchTotal || '?'} branches reported`}
+            >
+              <i style={{ width: `${branchTotal ? Math.round((t.branchesReporting / branchTotal) * 100) : 0}%` }} />
+            </div>
+          </div>
+
+          <div className="statcard">
+            <div className="n">{t.avgCompletion}%</div>
+            <div className="l">Average completion</div>
+            <div className="meter" role="img" aria-label={`${t.avgCompletion} percent average completion`}>
+              <i style={{ width: `${Math.max(0, Math.min(100, t.avgCompletion))}%` }} />
+            </div>
+          </div>
+
+          <button
+            className="statcard wide"
+            aria-pressed={lens === 'flagged'}
+            onClick={() => toggle('flagged')}
+          >
+            <div className="n">{flagged}</div>
+            <div className="l">Flagged tasks — tap to filter</div>
+            {flagged > 0 && (
+              <>
+                <div
+                  className="stack"
+                  role="img"
+                  aria-label={parts.map((p) => `${p.n} ${p.k}`).join(', ')}
+                >
+                  {parts.map((p) =>
+                    p.n ? (
+                      <span key={p.k} style={{ width: `${(p.n / partTotal) * 100}%`, background: p.c }} />
+                    ) : null,
+                  )}
+                </div>
+                <div className="mlegend">
+                  {parts.map((p) => (
+                    <span key={p.k}>
+                      <i style={{ background: p.c }} />
+                      <b>{p.n}</b> {p.k}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </button>
+
+          <button
+            className="statcard wide"
+            aria-pressed={lens === 'attention'}
+            onClick={() => toggle('attention')}
+          >
+            <div className="n">{attention.length}</div>
+            <div className="l">Checklists needing attention — flagged or unfinished</div>
+          </button>
+
+          <div className="statcard wide">
+            <div className="n">{t.openEscalations}</div>
+            <div className="l">Escalations opened this day</div>
+          </div>
         </div>
       ) : null}
-      {sum && sum.branches.length ? (
-        <table>
-          <thead>
-            <tr><th>Branch</th><th>Checklist</th><th>Status</th><th>Completion</th><th>Flagged</th><th>Pending</th></tr>
-          </thead>
-          <tbody>
-            {sum.branches.map((b, i) => (
-              <tr key={i}>
-                <td data-label="Branch"><b>{b.branch}</b></td>
-                <td data-label="Checklist">{b.checklist}</td>
-                <td data-label="Status">{statusLabel(b.status)}</td>
-                <td data-label="Completion">{b.completionPct}%</td>
-                <td data-label="Flagged">{b.flagged}</td>
-                <td data-label="Pending">{b.pending}</td>
-              </tr>
+
+      {all.length ? (
+        <>
+          <div className="sectionlabel listhd">
+            {lens === 'all' ? 'By checklist' : `${shown.length} of ${all.length} shown`}
+            {lens !== 'all' && (
+              <button className="linkbtn" onClick={() => setLens('all')}>Show all</button>
+            )}
+          </div>
+
+          {/* ---- phones: one compact card per checklist ------------------- */}
+          <div className="onlynarrow">
+            {shown.length === 0 && <div className="emptybox">Nothing matches. 🎉</div>}
+            {shown.map((b, i) => (
+              <div className="bcard" key={i}>
+                <div className="bchead">
+                  <span className="bn">{b.branch}</span>
+                  <span className={statusChip(b.status)}>{statusLabel(b.status)}</span>
+                </div>
+                <div className="bcsub">{b.checklist}</div>
+                <div className="bcbar">
+                  <span className="track">
+                    <i style={{ width: `${Math.max(0, Math.min(100, b.completionPct))}%` }} />
+                  </span>
+                  <span className="pct">{b.completionPct}%</span>
+                </div>
+                {(b.flagged > 0 || b.pending > 0) && (
+                  <div className="bcchips">
+                    {b.flagged > 0 && <span className="chip stt-medium">{b.flagged} flagged</span>}
+                    {b.pending > 0 && <span className="chip stt-medium">{b.pending} pending</span>}
+                  </div>
+                )}
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+
+          {/* ---- wider screens: the table --------------------------------- */}
+          <div className="onlywide">
+            <table>
+              <thead>
+                <tr><th>Branch</th><th>Checklist</th><th>Status</th><th>Completion</th><th>Flagged</th><th>Pending</th></tr>
+              </thead>
+              <tbody>
+                {shown.map((b, i) => (
+                  <tr key={i}>
+                    <td data-label="Branch"><b>{b.branch}</b></td>
+                    <td data-label="Checklist">{b.checklist}</td>
+                    <td data-label="Status">{statusLabel(b.status)}</td>
+                    <td data-label="Completion">{b.completionPct}%</td>
+                    <td data-label="Flagged">{b.flagged}</td>
+                    <td data-label="Pending">{b.pending}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
 
       {canEdit && cfg ? (
-        <div style={{ marginTop: 26, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 14 }}>
+        <div className="delivery">
           <div className="sectionlabel">Daily summary delivery</div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', margin: '8px 0' }}>
             <label><input type="checkbox" checked={cfg.enabled} onChange={(e) => setCfg({ ...cfg, enabled: e.target.checked })} /> Auto-send enabled</label>
@@ -125,28 +270,20 @@ export function ExecSummary({ api, me }: { api: Api; me: Me | null }) {
               <input placeholder="Name" value={r.name} onChange={(e) => setRecipient(i, 'name', e.target.value)} />
               <input placeholder="Email" value={r.email} onChange={(e) => setRecipient(i, 'email', e.target.value)} />
               <input placeholder="WhatsApp (+961...)" value={r.whatsapp} onChange={(e) => setRecipient(i, 'whatsapp', e.target.value)} />
-              <button onClick={() => removeRecipient(i)}>Remove</button>
+              <button className="btn-ghost" onClick={() => removeRecipient(i)}>Remove</button>
             </div>
           ))}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <button onClick={addRecipient}>Add recipient</button>
-            <button disabled={busy} onClick={save} style={{ background: 'var(--green)', color: '#fff' }}>Save settings</button>
-            <button disabled={busy} onClick={sendNow} style={{ background: 'var(--green)', color: '#fff' }}>Send now (this day)</button>
+            <button className="btn-ghost" onClick={addRecipient}>Add recipient</button>
+            <button className="btn-go" disabled={busy} onClick={save}>Save settings</button>
+            <button className="btn-go" disabled={busy} onClick={sendNow}>Send now (this day)</button>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
-            Email uses the Microsoft/Outlook sender; WhatsApp uses the 4jawaly channel. Each is only sent when its credentials are configured on the server.
-          </div>
+          <p className="footnote">
+            Email uses the Microsoft/Outlook sender; WhatsApp uses the 4jawaly channel. Each is only
+            sent when its credentials are configured on the server.
+          </p>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: any }) {
-  return (
-    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '10px 14px', minWidth: 110 }}>
-      <div style={{ fontSize: 22, fontWeight: 700 }}>{value}</div>
-      <div style={{ fontSize: 12, opacity: 0.7 }}>{label}</div>
     </div>
   );
 }
