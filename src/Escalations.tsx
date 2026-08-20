@@ -18,8 +18,15 @@ const STATUS_CLASS: Record<string, string> = {
   resolved: 'st-approved',
 };
 // The four rungs of the chain. Every level is always drawn, including the empty
-// ones — "nothing sitting at Level 2" is itself worth seeing.
+// ones — "nothing sitting at Level 2" is itself worth seeing. Which means the
+// name cannot come from the data: an empty level has no row to read it from.
 const LADDER = [1, 2, 3, 4];
+const LEVEL_NAME: Record<number, string> = {
+  1: 'Branch Manager',
+  2: 'Area Manager',
+  3: 'Operations',
+  4: 'Head Office',
+};
 const TREND_DAYS = 7;
 
 function ageMinutes(iso: string): number {
@@ -181,7 +188,7 @@ export function Escalations({ api }: { api: Api }) {
           <p className="psub">Open items by level · tap to filter</p>
           {LADDER.map((l, i) => {
             const n = byLevel[l] || 0;
-            const title = pool.find((r) => r.currentLevel === l)?.levelTitle || `Level ${l}`;
+            const title = pool.find((r) => r.currentLevel === l)?.levelTitle || LEVEL_NAME[l];
             return (
               <button
                 key={l}
@@ -189,19 +196,21 @@ export function Escalations({ api }: { api: Api }) {
                 aria-pressed={level === l}
                 onClick={() => setLevel(level === l ? null : l)}
               >
-                <span className="lvl">
-                  L{l} · {title}
+                <span className="lvhead">
+                  <span className="lvl">
+                    L{l} · {title}
+                  </span>
+                  <span className="val">{n}</span>
                 </span>
                 <span className="track">
                   <span
                     className="fill"
                     style={{
-                      width: n ? `${Math.max(3, Math.round((n / ladderMax) * 100))}%` : 0,
+                      width: n ? `${Math.max(2, Math.round((n / ladderMax) * 100))}%` : 0,
                       background: `var(--seq-${i + 1})`,
                     }}
                   />
                 </span>
-                <span className="val">{n}</span>
               </button>
             );
           })}
